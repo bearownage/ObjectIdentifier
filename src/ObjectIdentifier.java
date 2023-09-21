@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Hashtable;
 
 public class ObjectIdentifier {
@@ -14,17 +17,17 @@ public class ObjectIdentifier {
     int width = 640; // default image width and height
     int height = 480;
 
-    Hashtable<Integer, Integer> histogram;
+    Histogram histogram;
 
     ObjectIdentifier() {
-        histogram = new Hashtable<>();
+        histogram = new Histogram();
     }
 
     /**
      * Read Image RGB
      * Reads the image of given width and height at the given imgPath into the provided BufferedImage.
      */
-/*    private void readImageRGB(int width, int height, String imgPath, BufferedImage img) {
+    private void readImageRGB(int width, int height, String imgPath, BufferedImage img) {
         try {
             int frameLength = width * height * 3;
 
@@ -53,6 +56,21 @@ public class ObjectIdentifier {
                     byte b = bytes[ind + height * width * 2];
                     //Setings the a, then masks r using the least significant 8 bits rtc.
                     int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
+/*                    if (x == 0 && y == 0 ) {
+                        System.out.println((pix >> 16) & 0xFF);
+                        System.out.println((pix >> 8) & 0xFF);
+                        System.out.println((pix) & 0xFF);
+                    }*/
+
+                    if ( pix != -9045172) {
+                        if (histogram.getTable().containsKey(pix)) {
+                            histogram.getTable().put(pix, histogram.getTable().get(pix) + 1);
+                        } else {
+                            histogram.getTable().put(pix, 1);
+                        }
+                    } else {
+
+                    }
                     //System.out.println(pix);
                     img.setRGB(x, y, pix);
                     //int pix = ((a << 24) + (r << 16) + (g << 8) + b);
@@ -66,32 +84,22 @@ public class ObjectIdentifier {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }*/
-
-    void initObjectHistogram(BufferedImage originalImage) {
-        for (int x = 0; x < width; x++) {
-            for ( int y = 0; y < height; y++ ) {
-                // Ignore lime green
-                if ( originalImage.getRGB(x, y) != -16580864) {
-                    int pix = originalImage.getRGB(x, y);
-                    if (histogram.containsKey(pix)) {
-                        histogram.put(pix, histogram.get(pix) + 1);
-                    } else {
-                        histogram.put(pix, 1);
-                    }
-                } else {
-
-                }
-            }
-        }
     }
 
     public void showIms(String imagePath) throws IOException {
         // Read in the specified image
         originalImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        originalImage = ImageIO.read(new File(imagePath));
-        initObjectHistogram(originalImage);
-        System.out.println(histogram.toString());
+        //originalImage = ImageIO.read(new File(imagePath));
+        //initObjectHistogram(originalImage);
+        readImageRGB(width, height, imagePath, originalImage);
+        //System.out.println(histogram.toString());
+/*        ArrayList<Integer> test = new ArrayList<>();
+        for (Integer value : histogram.values()) {
+            test.add(value);
+            // ...
+        }
+        Collections.sort(test);
+        System.out.println(test);*/
 
         // Use label to display the image
         JLabel imageOnFrame = new JLabel(new ImageIcon(originalImage));
