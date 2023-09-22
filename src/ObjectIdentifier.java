@@ -7,9 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Hashtable;
 
 public class ObjectIdentifier {
 
@@ -63,10 +61,10 @@ public class ObjectIdentifier {
                     }*/
 
                     if ( pix != -9045172) {
-                        if (histogram.getTable().containsKey(pix)) {
-                            histogram.getTable().put(pix, histogram.getTable().get(pix) + 1);
+                        if (histogram.getRawTable().containsKey(pix)) {
+                            histogram.getRawTable().put(pix, histogram.getRawTable().get(pix) + 1);
                         } else {
-                            histogram.getTable().put(pix, 1);
+                            histogram.getRawTable().put(pix, 1);
                         }
                     } else {
 
@@ -93,13 +91,16 @@ public class ObjectIdentifier {
         //initObjectHistogram(originalImage);
         readImageRGB(width, height, imagePath, originalImage);
         //System.out.println(histogram.toString());
-/*        ArrayList<Integer> test = new ArrayList<>();
-        for (Integer value : histogram.values()) {
+        ArrayList<Integer> test = new ArrayList<>();
+        for (Integer value : histogram.getRawTable().values()) {
             test.add(value);
             // ...
         }
         Collections.sort(test);
-        System.out.println(test);*/
+        System.out.println(test);
+        histogram.calculateTotalPixels();
+        histogram.initRatioTable();
+        //System.out.println(histogram.getRatioTable().toString());
 
         // Use label to display the image
         JLabel imageOnFrame = new JLabel(new ImageIcon(originalImage));
