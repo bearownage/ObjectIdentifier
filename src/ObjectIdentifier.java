@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Hashtable;
 
 public class ObjectIdentifier {
 
@@ -15,10 +16,10 @@ public class ObjectIdentifier {
     int width = 640; // default image width and height
     int height = 480;
 
-    Histogram histogram;
+    Hashtable<String, Histogram> histograms;
 
     ObjectIdentifier() {
-        histogram = new Histogram();
+        histograms = new Hashtable<>();
     }
 
     /**
@@ -27,6 +28,9 @@ public class ObjectIdentifier {
      */
     private void readImageRGB(int width, int height, String imgPath, BufferedImage img) {
         try {
+            //Create a new HashTable for this object
+            histograms.put(imgPath, new Histogram());
+
             int frameLength = width * height * 3;
 
             File file = new File(imgPath);
@@ -61,10 +65,10 @@ public class ObjectIdentifier {
                     }*/
 
                     if ( pix != -9045172) {
-                        if (histogram.getRawTable().containsKey(pix)) {
-                            histogram.getRawTable().put(pix, histogram.getRawTable().get(pix) + 1);
+                        if (histograms.get(imgPath).getRawTable().containsKey(pix)) {
+                            histograms.get(imgPath).getRawTable().put(pix, histograms.get(imgPath).getRawTable().get(pix) + 1);
                         } else {
-                            histogram.getRawTable().put(pix, 1);
+                            histograms.get(imgPath).getRawTable().put(pix, 1);
                         }
                     } else {
 
@@ -84,6 +88,10 @@ public class ObjectIdentifier {
         }
     }
 
+    public void mapRGBtoHSV() {
+
+    }
+
     public void showIms(String imagePath) throws IOException {
         // Read in the specified image
         originalImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -92,18 +100,19 @@ public class ObjectIdentifier {
         readImageRGB(width, height, imagePath, originalImage);
         //System.out.println(histogram.toString());
         ArrayList<Integer> test = new ArrayList<>();
-        for (Integer value : histogram.getRawTable().values()) {
+        for (Integer value : histograms.get(imagePath).getRawTable().values()) {
             test.add(value);
             // ...
         }
         Collections.sort(test);
-        System.out.println(test);
-        histogram.calculateTotalPixels();
-        histogram.initRatioTable();
+        //System.out.println(test);
+        histograms.get(imagePath).calculateTotalPixels();
+        histograms.get(imagePath).initRatioTable();
+        System.out.println(histograms.toString());
         //System.out.println(histogram.getRatioTable().toString());
 
         // Use label to display the image
-        JLabel imageOnFrame = new JLabel(new ImageIcon(originalImage));
+/*        JLabel imageOnFrame = new JLabel(new ImageIcon(originalImage));
 
         GridBagLayout gLayout = new GridBagLayout();
         JFrame frame = new JFrame();
@@ -120,11 +129,14 @@ public class ObjectIdentifier {
         frame.getContentPane().add(imageOnFrame, c);
 
         frame.pack();
-        frame.setVisible(true);
+        frame.setVisible(true);*/
     }
 
     public static void main(String[] args) throws IOException {
         ObjectIdentifier objectIdentifier = new ObjectIdentifier();
-        objectIdentifier.showIms(args[0]);
+
+        for (int i = 1; i < args.length; i++ ) {
+            objectIdentifier.showIms(args[i]);
+        }
     }
 }
