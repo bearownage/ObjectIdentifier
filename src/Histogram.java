@@ -20,12 +20,21 @@ public class Histogram {
         return ratioTable;
     }
 
-    public void calculateTotalPixels() {
-        for (Integer value : rawTable.values()) {
+    public void calculateTotalPixels(int topLeftCornerX, int topLeftCornerY, int bottomRightCornerX, int bottomRightCornerY) {
+        System.out.println("Calculating");
+        System.out.println(topLeftCornerX);
+        System.out.println(topLeftCornerY);
+        System.out.println(bottomRightCornerX);
+        System.out.println(bottomRightCornerY);
+
+        totalPixels = (double) (bottomRightCornerX - topLeftCornerX) * (bottomRightCornerY - topLeftCornerY);
+        System.out.println(totalPixels);
+
+        /*for (Integer value : rawTable.values()) {
             totalPixels+=value;
         }
 
-        System.out.println(totalPixels);
+        System.out.println(totalPixels);*/
     }
 
     public void initRatioTable() {
