@@ -3,20 +3,22 @@ import java.util.*;
 public class Histogram {
 
     private Double totalPixels;
-    Hashtable<Integer, Integer> rawTable;
-    Hashtable<Integer, Double> ratioTable;
+    Hashtable<Float, Integer> rawTable;
+    Hashtable<Float, Double> ratioTable;
+    List<Float> mostCommonColors;
 
     public Histogram() {
+        this.mostCommonColors = new ArrayList<>();
         this.rawTable = new Hashtable<>();
         this.ratioTable = new Hashtable<>();
         totalPixels = 0.0;
     }
 
-    public Hashtable<Integer, Integer> getRawTable() {
+    public Hashtable<Float, Integer> getRawTable() {
         return rawTable;
     }
 
-    public Hashtable<Integer, Double> getRatioTable() {
+    public Hashtable<Float, Double> getRatioTable() {
         return ratioTable;
     }
 
@@ -37,6 +39,10 @@ public class Histogram {
         System.out.println(totalPixels);*/
     }
 
+    public List<Float> getMostCommonColors() {
+        return mostCommonColors;
+    }
+
     public void initRatioTable() {
         List<Double> values = new ArrayList<>();
         rawTable.forEach((key, value) -> {
@@ -44,8 +50,29 @@ public class Histogram {
             values.add(ratioValue);
             ratioTable.put(key, ratioValue);
         });
-        Collections.sort(values);
-        //System.out.println(values.toString());
+        values.sort(Collections.reverseOrder());
+
+        int numberOfTopValuesToTrack = 20;
+        List<Double> mostCommonValues = new ArrayList<>();
+        for (int i = 0; i < numberOfTopValuesToTrack; i++) {
+            mostCommonValues.add(values.get(i));
+        }
+
+        //List<Double> mostCommonValues = Arrays.asList(values.get(0), values.get(1), values.get(2), values.get(3));
+        System.out.println(mostCommonValues);
+        System.out.println(mostCommonValues.stream().mapToDouble(Double::doubleValue).sum());
+
+        for (Double value : mostCommonValues) {
+            for (Map.Entry<Float, Double> e : ratioTable.entrySet()) {
+                Double value1 = e.getValue();
+                if (Objects.equals(value, value1)) {
+                    mostCommonColors.add(e.getKey());
+                }
+            }
+        }
+
+
+        System.out.println(mostCommonColors.toString());
 
     }
 
