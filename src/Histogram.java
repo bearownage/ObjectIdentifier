@@ -3,9 +3,9 @@ import java.util.*;
 public class Histogram {
 
     private Double totalPixels;
-    Hashtable<Float, Integer> rawTable;
-    Hashtable<Float, Double> ratioTable;
-    List<Float> mostCommonColors;
+    Hashtable<Integer, Integer> rawTable;
+    Hashtable<Integer, Double> ratioTable;
+    List<Integer> mostCommonColors;
 
     public Histogram() {
         this.mostCommonColors = new ArrayList<>();
@@ -14,11 +14,11 @@ public class Histogram {
         totalPixels = 0.0;
     }
 
-    public Hashtable<Float, Integer> getRawTable() {
+    public Hashtable<Integer, Integer> getRawTable() {
         return rawTable;
     }
 
-    public Hashtable<Float, Double> getRatioTable() {
+    public Hashtable<Integer, Double> getRatioTable() {
         return ratioTable;
     }
 
@@ -39,7 +39,7 @@ public class Histogram {
         System.out.println(totalPixels);*/
     }
 
-    public List<Float> getMostCommonColors() {
+    public List<Integer> getMostCommonColors() {
         return mostCommonColors;
     }
 
@@ -52,18 +52,26 @@ public class Histogram {
         });
         values.sort(Collections.reverseOrder());
 
-        int numberOfTopValuesToTrack = 20;
+        //int numberOfTopValuesToTrack = 20;
         List<Double> mostCommonValues = new ArrayList<>();
-        for (int i = 0; i < numberOfTopValuesToTrack; i++) {
-            mostCommonValues.add(values.get(i));
+        double sum = 0.0;
+        for (Double value : values) {
+            sum += value;
+            mostCommonValues.add(value);
+            if ( sum > 0.90 ) {
+                break;
+            }
         }
+        //for (int i = 0; i < numberOfTopValuesToTrack; i++) {
+        //    mostCommonValues.add(values.get(i));
+        //}
 
         //List<Double> mostCommonValues = Arrays.asList(values.get(0), values.get(1), values.get(2), values.get(3));
-        System.out.println(mostCommonValues);
-        System.out.println(mostCommonValues.stream().mapToDouble(Double::doubleValue).sum());
+        //System.out.println("Most common values: " + mostCommonValues);
+        //System.out.println(mostCommonValues.stream().mapToDouble(Double::doubleValue).sum());
 
         for (Double value : mostCommonValues) {
-            for (Map.Entry<Float, Double> e : ratioTable.entrySet()) {
+            for (Map.Entry<Integer, Double> e : ratioTable.entrySet()) {
                 Double value1 = e.getValue();
                 if (Objects.equals(value, value1)) {
                     mostCommonColors.add(e.getKey());
@@ -71,9 +79,9 @@ public class Histogram {
             }
         }
 
-
-        System.out.println(mostCommonColors.toString());
-
+        //System.out.println("Most common colors: " + mostCommonColors.toString());
+        //System.out.println(mostCommonColors.size());
+        System.out.println("Size of ratio table: " + ratioTable.size());
     }
 
 

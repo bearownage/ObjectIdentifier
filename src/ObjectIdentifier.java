@@ -77,11 +77,11 @@ public class ObjectIdentifier {
                     int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
                     if (x == 0 && y == 0) {
                         greenBackgroundPix = pix;
-                        System.out.println((pix >> 16) & 0xFF);
+                        /*System.out.println((pix >> 16) & 0xFF);
                         System.out.println((pix >> 8) & 0xFF);
                         System.out.println((pix) & 0xFF);
                         System.out.println("h of green: " + Math.round(ColorConverter.RGBtoHSV((pix >> 16) & 0xFF, (pix >> 8) & 0xFF, (pix) & 0xFF, 0, 0, 0).get(0)));
-                    }
+                    */}
 
                     if (pix != greenBackgroundPix) {
                         topLeftCornerX = Math.min(topLeftCornerX, x);
@@ -92,8 +92,9 @@ public class ObjectIdentifier {
                         int rR = (pix >> 16) & 0xFF;
                         int gG = (pix >> 8) & 0xFF;
                         int bB = (pix) & 0xFF;
-                        List<Float> hsv = ColorConverter.RGBtoHSV(rR, gG, bB, 0, 0, 0);
-                        float h = Math.round(hsv.get(0));
+                        List<Integer> hsv = ColorConverter.RGBtoHSV(rR, gG, bB, 0, 0, 0);
+                        int h = Math.round(hsv.get(0));
+                        //float h = hsv.get(0);
 /*                        if (h == 106) {
                             illegalGreens++;
                             System.out.println("Found another pixel that matches real h: " + 106);
@@ -125,8 +126,9 @@ public class ObjectIdentifier {
 
             objectHistograms.get(imgPath).calculateTotalPixels(topLeftCornerX, topLeftCornerY, bottomRightCornerX, bottomRightCornerY);
             objectHistograms.get(imgPath).initRatioTable();
-            System.out.println("Size of histogram : " + objectHistograms.get(imgPath).getRatioTable().size());
-            System.out.println("Illegal greens: " + illegalGreens);
+            System.out.println(objectHistograms.get(imgPath).getRatioTable().toString());
+            //System.out.println("Size of histogram : " + objectHistograms.get(imgPath).getRatioTable().size());
+            //System.out.println("Illegal greens: " + illegalGreens);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -134,8 +136,8 @@ public class ObjectIdentifier {
         }
     }
 
-    public void createImageHistogram(String imagePath) throws FileNotFoundException {
-        System.out.println("Creating the image histogram");
+    public void createImageClusters(String imagePath) throws FileNotFoundException {
+        System.out.println("Creating the image clusters");
         inputImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         try {
             int frameLength = width * height * 3;
@@ -165,10 +167,10 @@ public class ObjectIdentifier {
                     int rR = (pix >> 16) & 0xFF;
                     int gG = (pix >> 8) & 0xFF;
                     int bB = (pix) & 0xFF;
-                    ;
-                    List<Float> hsv = ColorConverter.RGBtoHSV(rR, gG, bB, 0, 0, 0);
-                    float h = Math.round(hsv.get(0));
-                    if (objectHistograms.get(objectNames.get(0)).getMostCommonColors().contains(h) && !once) {
+                    List<Integer> hsv = ColorConverter.RGBtoHSV(rR, gG, bB, 0, 0, 0);
+                    int h = Math.round(hsv.get(0));
+                    //float h = hsv.get(0);
+                    /*if (objectHistograms.get(objectNames.get(0)).getMostCommonColors().contains(h) && !once) {
                         System.out.println("Found a match in image!");
                         System.out.println(rR);
                         System.out.println(gG);
@@ -179,7 +181,7 @@ public class ObjectIdentifier {
 
 
                         once = true;
-                    }
+                    }*/
                     //Initiate cluster
 
                     if (clusters[x][y] == null) {
@@ -195,6 +197,8 @@ public class ObjectIdentifier {
                                 } else {
                                     clusters[x][y] = new Cluster(h, 1, x, y, x, y);
                                     clusters[x][y].addNeighboringClusters(Arrays.asList(clusters[x - 1][y], clusters[x][y - 1]));
+                                    clusters[x-1][y].addNeighboringClusters(List.of(clusters[x][y]));
+                                    clusters[x][y-1].addNeighboringClusters(List.of(clusters[x][y]));
                                 }
                             } else {
                                 if (clusters[x - 1][y].getHValue() == h) {
@@ -202,6 +206,7 @@ public class ObjectIdentifier {
                                     clusters[x][y] = clusters[x - 1][y];
                                 } else {
                                     clusters[x][y] = new Cluster(h, 1, x, y, x, y);
+                                    clusters[x-1][y].addNeighboringClusters(List.of(clusters[x][y]));
                                 }
                             }
                         } else {
@@ -212,6 +217,7 @@ public class ObjectIdentifier {
                                     clusters[x][y] = clusters[x][y - 1];
                                 } else {
                                     clusters[x][y] = new Cluster(h, 1, x, y, x, y);
+                                    clusters[x][y-1].addNeighboringClusters(List.of(clusters[x][y]));
                                 }
                             } else {
                                 clusters[x][y] = new Cluster(h, 1, x, y, x, y);
@@ -220,6 +226,8 @@ public class ObjectIdentifier {
                         //Check left and top of datapoint
                     }
 
+                    //Add this point to the cluster
+                    clusters[x][y].addPoint(x, y);
 
                     if (imageHistogram.getRawTable().containsKey(h)) {
                         imageHistogram.getRawTable().put(h, imageHistogram.getRawTable().get(h) + 1);
@@ -228,20 +236,26 @@ public class ObjectIdentifier {
                     }
 
                     //System.out.println(h);
+                    inputImage.setRGB(x, y, pix);
                     ind++;
                 }
             }
 
+            Set<Cluster> seenCluster = new HashSet<>();
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
-                    if (clusters[x][y].getHValue() == 240) {
-                        System.out.println("cluster: " + clusters[x][y] + " size of cluster " + clusters[x][y].getSize() + "sx " + clusters[x][y].startX + "sy " + clusters[x][y].startY + "ex " + clusters[x][y].endX + "ey " + clusters[x][y].endY);
+                    if (objectHistograms.get(objectNames.get(0)).getRatioTable().containsKey(clusters[x][y].getHValue()) && !seenCluster.contains(clusters[x][y])) {
+                        if ( clusters[x][y].getSize() > 100 ) {
+                            System.out.println("cluster: " + clusters[x][y] + " size of cluster " + clusters[x][y].getSize() + " sx " + clusters[x][y].startX + " sy " + clusters[x][y].startY + " ex " + clusters[x][y].endX + " ey " + clusters[x][y].endY);
+                        }
+                        seenCluster.add(clusters[x][y]);
                     }
                 }
             }
+            System.out.println("Total number of clusters : " + seenCluster.size());
 
-            imageHistogram.calculateTotalPixels(0, 0, width, height);
-            imageHistogram.initRatioTable();
+            //imageHistogram.calculateTotalPixels(0, 0, width, height);
+            //imageHistogram.initRatioTable();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -251,21 +265,80 @@ public class ObjectIdentifier {
 
 
     public void findObjectInImage() {
+        System.out.println("Finding object");
         boolean[][] visited = new boolean[width+1][height+1];
+        Histogram objectHistogram = objectHistograms.get(objectNames.get(0));
+        //System.out.println(objectHistogram.getRatioTable().toString());
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                if (objectHistograms.get(objectNames.get(0)).getMostCommonColors().contains(clusters[x][y].getHValue())) {
-
+                //System.out.println(visited[x][y]);
+                if (objectHistogram.getRatioTable().containsKey(clusters[x][y].getHValue()) && !visited[x][y]) {
+                    //System.out.println("Match!");
+                    visited = mergeClusters(x, y, objectHistogram, clusters[x][y], visited);
+                    //System.out.println(x + " " + y);
+                    //System.out.println(visited[x][y]);
                 }
             }
         }
     }
 
-    public void mergeClusters() {
+    public boolean[][] mergeClusters(int x, int y, Histogram objectHistogram, Cluster cluster, boolean[][] visited) {
+        //System.out.println(x + " " + y);
         Histogram clusterHistogram;
+        List<Cluster> neighbors = cluster.getNeighboringClusters();
 
+        int startX = cluster.getStartX();
+        int startY = cluster.getStartY();
+        int endX = cluster.getEndX();
+        int endY = cluster.getEndY();
+        double size = cluster.getSize();
 
+        Set<Cluster> visitedNeighbors = new HashSet<>(List.of(cluster));
+        List<int[]> pointsInCluster = new ArrayList<>(cluster.getPoints());
 
+        while (neighbors.size() != 0) {
+            Cluster neighbor = neighbors.get(0);
+            //System.out.println("Going through neighbors: " + neighbor.getStartX() + " " + neighbor.getStartY());
+            visitedNeighbors.add(neighbor);
+            neighbors.remove(0);
+            if (objectHistogram.getRatioTable().containsKey(neighbor.getHValue())) {
+                for (Cluster newNeighbor : cluster.getNeighboringClusters() ) {
+                    if (!visitedNeighbors.contains(neighbor)) {
+                        neighbors.add(newNeighbor);
+                    }
+                }
+                //neighbors.addAll(neighbor.getNeighboringClusters().stream().filter(e -> !visitedNeighbors.contains(e)).collect(Collectors.toList()));
+                size += neighbor.getSize();
+                startX = Math.min(startX, neighbor.getStartX());
+                startY = Math.min(startY, neighbor.getStartY());
+                endX = Math.max(endX, neighbor.getEndX());
+                endY = Math.max(endY, neighbor.getEndY());
+                pointsInCluster.addAll(neighbor.getPoints());
+            }
+        }
+
+        for (int[] point : pointsInCluster) {
+            visited[point[0]][point[1]] = true;
+        }
+
+        /*for (int i = startX; i < endX; i++) {
+            for (int j = startY; j < endY; j++) {
+                //System.out.println("Set value to true");
+                visited[i][j] = true;
+            }
+        }*/
+
+        if (size > 500) {
+            System.out.println("Possible object found!");
+            System.out.println("startx: " + startX);
+            System.out.println("starty: " + startY);
+            System.out.println("endx: " + endX);
+            System.out.println("endy: " + endY);
+            System.out.println("size: " + size);
+            System.out.println("Visited neighbors: " + visitedNeighbors.size());
+            System.out.println("points in cluster: " + pointsInCluster.size());
+        }
+        return visited;
     }
 
     public void createObjectHistogram(String imagePath) throws IOException {
@@ -275,16 +348,35 @@ public class ObjectIdentifier {
         //initObjectHistogram(originalImage);
         readObjectRGB(width, height, imagePath, object);
         //System.out.println(histogram.toString());
-        ArrayList<Integer> test = new ArrayList<>();
+/*        ArrayList<Integer> test = new ArrayList<>();
         for (Integer value : objectHistograms.get(imagePath).getRawTable().values()) {
             test.add(value);
             // ...
         }
-        Collections.sort(test);
+        Collections.sort(test);*/
+
         //System.out.println(test);
         //System.out.println(objectHistograms.toString());
         // Use label to display the image
-        JLabel imageOnFrame = new JLabel(new ImageIcon(object));
+    }
+
+    public static void main(String[] args) throws IOException {
+        ObjectIdentifier objectIdentifier = new ObjectIdentifier();
+
+        for (int i = 1; i < args.length; i++) {
+            objectIdentifier.createObjectHistogram(args[i]);
+        }
+
+        objectIdentifier.createImageClusters(args[0]);
+
+        objectIdentifier.findObjectInImage();
+
+        //System.out.println(ColorConverter.RGBtoHSV(255, 128, 64, 0, 0, 0));
+
+        BufferedImage SubImg
+                = objectIdentifier.inputImage.getSubimage(254, 395, 65, 24);
+
+        JLabel imageOnFrame = new JLabel(new ImageIcon(SubImg));
 
         GridBagLayout gLayout = new GridBagLayout();
         JFrame frame = new JFrame();
@@ -302,18 +394,5 @@ public class ObjectIdentifier {
 
         frame.pack();
         frame.setVisible(true);
-    }
-
-    public static void main(String[] args) throws IOException {
-        ObjectIdentifier objectIdentifier = new ObjectIdentifier();
-
-        for (int i = 1; i < args.length; i++) {
-            objectIdentifier.createObjectHistogram(args[i]);
-        }
-
-        objectIdentifier.createImageHistogram(args[0]);
-
-        //System.out.println(ColorConverter.RGBtoHSV(255, 128, 64, 0, 0, 0));
-
     }
 }

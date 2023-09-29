@@ -6,7 +6,7 @@ public class ColorConverter {
     // r,g,b values are from 0 to 1
 // h = [0,360], s = [0,1], v = [0,1]
 //		if s == 0, then h = -1 (undefined)
-    static List<Float> RGBtoHSV(float r, float g, float b, float h, float s, float v) {
+    static List<Integer> RGBtoHSV(float r, float g, float b, float h, float s, float v) {
         float min, max, delta;
         min = Math.min(r, Math.min(g, b));
         max = Math.max(r, Math.max(g, b));
@@ -20,7 +20,7 @@ public class ColorConverter {
             //r = g = b = 0
             s = 0;
             h = -1;
-            return Arrays.asList(h, s, v);
+            return Arrays.asList(Math.round(h), Math.round(s), Math.round(v));
         }
 
         if (r == max) {
@@ -36,7 +36,7 @@ public class ColorConverter {
             h += 360;
         }
 
-        return Arrays.asList(h, s, v);
+        return Arrays.asList(Math.round(h), Math.round(s), Math.round(v));
     }
 
     static List<Float> HSVtoRGB(float r, float g, float b, float h, float s, float v) {
