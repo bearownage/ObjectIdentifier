@@ -7,39 +7,56 @@ public class Cluster {
     double size;
     List<Cluster> neighboringClusters;
 
-    int startX = 1000;
-    int startY = 1000;
-    int endX = -1;
-    int endY = -1;
+    int startX;
+    int startY;
+    int endX;
+    int endY;
 
-    public Cluster(float hValue, double size) {
+    public Cluster(float hValue, double size, int startX, int startY, int endX, int endY) {
         this.hValue = hValue;
         this.size = size;
+        this.startX = startX;
+        this.startY = startY;
+        this.endX = endX;
+        this.endY = endY;
         neighboringClusters = new ArrayList<>();
     }
 
-    public void increaseSize() {
+    public float getHValue() {
+        return hValue;
+    }
+
+    public Cluster increaseSize() {
         size++;
+        return this;
     }
 
-    public void addNeighboringCluster(Cluster cluster) {
-        this.neighboringClusters.add(cluster);
+    public double getSize() {
+        return size;
     }
 
-    public void setStartX(int x) {
+    public Cluster addNeighboringClusters(List<Cluster> clusters) {
+        this.neighboringClusters.addAll(clusters);
+        return this;
+    }
+
+    public Cluster setStartX(int x) {
         this.startX = Math.min(startX, x);
+        return this;
     }
 
-    public void setStartY(int y) {
+    public Cluster setStartY(int y) {
         this.startX = Math.min(startY, y);
+        return this;
     }
 
-    public void setEndX(int x) {
+    public Cluster setEndX(int x) {
         this.startX = Math.max(startX, x);
+        return this;
     }
 
-    public void setEndY(int y) {
+    public Cluster setEndY(int y) {
         this.startX = Math.max(startY, y);
-
+        return this;
     }
 }
