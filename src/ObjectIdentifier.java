@@ -18,6 +18,8 @@ public class ObjectIdentifier {
     int width = 640; // default image width and height
     int height = 480;
 
+    Cluster[][] clusters;
+
     Hashtable<String, Histogram> objectHistograms;
     List<String> imageNames;
     Histogram imageHistogram;
@@ -26,6 +28,7 @@ public class ObjectIdentifier {
         objectHistograms = new Hashtable<>();
         imageHistogram = new Histogram();
         imageNames = new ArrayList<>();
+        clusters = new Cluster[width + 1][height + 1];
     }
 
     /**
@@ -80,7 +83,7 @@ public class ObjectIdentifier {
                         System.out.println((pix >> 16) & 0xFF);
                         System.out.println((pix >> 8) & 0xFF);
                         System.out.println((pix) & 0xFF);
-                        System.out.println("h of green: " + Math.round(ColorConverter.RGBtoHSV((pix >> 16) & 0xFF, (pix >> 8) & 0xFF, (pix) & 0xFF, 0, 0,0).get(0)));
+                        System.out.println("h of green: " + Math.round(ColorConverter.RGBtoHSV((pix >> 16) & 0xFF, (pix >> 8) & 0xFF, (pix) & 0xFF, 0, 0, 0).get(0)));
                     }
 
                     if (pix != greenBackgroundPix) {
@@ -91,8 +94,8 @@ public class ObjectIdentifier {
 
                         int rR = (pix >> 16) & 0xFF;
                         int gG = (pix >> 8) & 0xFF;
-                        int bB = (pix) & 0xFF;;
-                        List<Float> hsv = ColorConverter.RGBtoHSV(rR, gG, bB, 0, 0,0);
+                        int bB = (pix) & 0xFF;
+                        List<Float> hsv = ColorConverter.RGBtoHSV(rR, gG, bB, 0, 0, 0);
                         float h = Math.round(hsv.get(0));
 /*                        if (h == 106) {
                             illegalGreens++;
@@ -164,8 +167,9 @@ public class ObjectIdentifier {
                     int pix = 0xff000000 | ((r & 0xff) << 16) | ((g & 0xff) << 8) | (b & 0xff);
                     int rR = (pix >> 16) & 0xFF;
                     int gG = (pix >> 8) & 0xFF;
-                    int bB = (pix) & 0xFF;;
-                    List<Float> hsv = ColorConverter.RGBtoHSV(rR, gG, bB, 0, 0,0);
+                    int bB = (pix) & 0xFF;
+                    ;
+                    List<Float> hsv = ColorConverter.RGBtoHSV(rR, gG, bB, 0, 0, 0);
                     float h = Math.round(hsv.get(0));
                     if (objectHistograms.get(imageNames.get(0)).getMostCommonColors().contains(h) && !once) {
                         System.out.println("Found a match in image!");

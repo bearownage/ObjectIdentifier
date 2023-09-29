@@ -7,10 +7,10 @@ public class Cluster {
     double size;
     List<Cluster> neighboringClusters;
 
-    int startX;
-    int startY;
-    int endX;
-    int endY;
+    int startX = 1000;
+    int startY = 1000;
+    int endX = -1;
+    int endY = -1;
 
     public Cluster(float hValue, double size) {
         this.hValue = hValue;
@@ -24,5 +24,22 @@ public class Cluster {
 
     public void addNeighboringCluster(Cluster cluster) {
         this.neighboringClusters.add(cluster);
+    }
+
+    public void setStartX(int x) {
+        this.startX = Math.min(startX, x);
+    }
+
+    public void setStartY(int y) {
+        this.startX = Math.min(startY, y);
+    }
+
+    public void setEndX(int x) {
+        this.startX = Math.max(startX, x);
+    }
+
+    public void setEndY(int y) {
+        this.startX = Math.max(startY, y);
+
     }
 }
