@@ -58,7 +58,7 @@ public class Histogram {
         for (Double value : values) {
             sum += value;
             mostCommonValues.add(value);
-            if ( sum > 0.90 ) {
+            if ( sum > 0.70 ) {
                 break;
             }
         }

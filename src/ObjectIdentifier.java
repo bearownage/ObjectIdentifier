@@ -81,7 +81,8 @@ public class ObjectIdentifier {
                         System.out.println((pix >> 8) & 0xFF);
                         System.out.println((pix) & 0xFF);
                         System.out.println("h of green: " + Math.round(ColorConverter.RGBtoHSV((pix >> 16) & 0xFF, (pix >> 8) & 0xFF, (pix) & 0xFF, 0, 0, 0).get(0)));
-                    */}
+                    */
+                    }
 
                     if (pix != greenBackgroundPix) {
                         topLeftCornerX = Math.min(topLeftCornerX, x);
@@ -192,13 +193,14 @@ public class ObjectIdentifier {
                                     clusters[x - 1][y].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x - 1][y];
                                 } else if (clusters[x][y - 1].getHValue() == h) {
-                                    clusters[x][y-1].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
+                                    clusters[x][y - 1].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x][y - 1];
                                 } else {
                                     clusters[x][y] = new Cluster(h, 1, x, y, x, y);
                                     clusters[x][y].addNeighboringClusters(Arrays.asList(clusters[x - 1][y], clusters[x][y - 1]));
-                                    clusters[x-1][y].addNeighboringClusters(List.of(clusters[x][y]));
-                                    clusters[x][y-1].addNeighboringClusters(List.of(clusters[x][y]));
+                                    clusters[x - 1][y].addNeighboringClusters(List.of(clusters[x][y]));
+                                    clusters[x][y - 1].addNeighboringClusters(List.of(clusters[x][y]));
+                                    clusters[x - 1][y - 1].addNeighboringClusters(List.of(clusters[x][y]));
                                 }
                             } else {
                                 if (clusters[x - 1][y].getHValue() == h) {
@@ -206,18 +208,18 @@ public class ObjectIdentifier {
                                     clusters[x][y] = clusters[x - 1][y];
                                 } else {
                                     clusters[x][y] = new Cluster(h, 1, x, y, x, y);
-                                    clusters[x-1][y].addNeighboringClusters(List.of(clusters[x][y]));
+                                    clusters[x - 1][y].addNeighboringClusters(List.of(clusters[x][y]));
                                 }
                             }
                         } else {
                             // x == 0
                             if (y > 0) {
                                 if (clusters[x][y - 1].getHValue() == h) {
-                                    clusters[x][y-1].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
+                                    clusters[x][y - 1].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x][y - 1];
                                 } else {
                                     clusters[x][y] = new Cluster(h, 1, x, y, x, y);
-                                    clusters[x][y-1].addNeighboringClusters(List.of(clusters[x][y]));
+                                    clusters[x][y - 1].addNeighboringClusters(List.of(clusters[x][y]));
                                 }
                             } else {
                                 clusters[x][y] = new Cluster(h, 1, x, y, x, y);
@@ -245,7 +247,7 @@ public class ObjectIdentifier {
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
                     if (objectHistograms.get(objectNames.get(0)).getRatioTable().containsKey(clusters[x][y].getHValue()) && !seenCluster.contains(clusters[x][y])) {
-                        if ( clusters[x][y].getSize() > 100 ) {
+                        if (clusters[x][y].getSize() > 100) {
                             System.out.println("cluster: " + clusters[x][y] + " size of cluster " + clusters[x][y].getSize() + " sx " + clusters[x][y].startX + " sy " + clusters[x][y].startY + " ex " + clusters[x][y].endX + " ey " + clusters[x][y].endY);
                         }
                         seenCluster.add(clusters[x][y]);
@@ -263,18 +265,19 @@ public class ObjectIdentifier {
         }
     }
 
-
     public void findObjectInImage() {
         System.out.println("Finding object");
-        boolean[][] visited = new boolean[width+1][height+1];
+        boolean[][] visited = new boolean[width + 1][height + 1];
         Histogram objectHistogram = objectHistograms.get(objectNames.get(0));
+        Set<Cluster> clustersAccountedFor = new HashSet<>();
         //System.out.println(objectHistogram.getRatioTable().toString());
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 //System.out.println(visited[x][y]);
-                if (objectHistogram.getRatioTable().containsKey(clusters[x][y].getHValue()) && !visited[x][y]) {
+                if (objectHistogram.getMostCommonColors().contains(clusters[x][y].getHValue()) && !visited[x][y]) {
                     //System.out.println("Match!");
-                    visited = mergeClusters(x, y, objectHistogram, clusters[x][y], visited);
+                    //System.out.println(clustersAccountedFor.size());
+                    visited = mergeClusters(x, y, objectHistogram, clusters[x][y], visited, clustersAccountedFor);
                     //System.out.println(x + " " + y);
                     //System.out.println(visited[x][y]);
                 }
@@ -282,10 +285,10 @@ public class ObjectIdentifier {
         }
     }
 
-    public boolean[][] mergeClusters(int x, int y, Histogram objectHistogram, Cluster cluster, boolean[][] visited) {
+    public boolean[][] mergeClusters(int x, int y, Histogram objectHistogram, Cluster cluster, boolean[][] visited, Set<Cluster> clustersAccountedFor) {
         //System.out.println(x + " " + y);
         Histogram clusterHistogram;
-        List<Cluster> neighbors = cluster.getNeighboringClusters();
+        List<Cluster> neighbors = new ArrayList<>(cluster.getNeighboringClusters());
 
         int startX = cluster.getStartX();
         int startY = cluster.getStartY();
@@ -295,16 +298,29 @@ public class ObjectIdentifier {
 
         Set<Cluster> visitedNeighbors = new HashSet<>(List.of(cluster));
         List<int[]> pointsInCluster = new ArrayList<>(cluster.getPoints());
+        List<Integer> colorsInCluster = new ArrayList<>(List.of(cluster.getHValue()));
 
         while (neighbors.size() != 0) {
             Cluster neighbor = neighbors.get(0);
+
             //System.out.println("Going through neighbors: " + neighbor.getStartX() + " " + neighbor.getStartY());
-            visitedNeighbors.add(neighbor);
+            //visitedNeighbors.add(neighbor);
             neighbors.remove(0);
-            if (objectHistogram.getRatioTable().containsKey(neighbor.getHValue())) {
-                for (Cluster newNeighbor : cluster.getNeighboringClusters() ) {
-                    if (!visitedNeighbors.contains(neighbor)) {
+            colorsInCluster.add(neighbor.getHValue());
+
+            if (objectHistogram.getMostCommonColors().contains(neighbor.getHValue())) {
+/*                if (Objects.equals(neighbor.toString(), "Cluster@6a8b94b2")) {
+                    System.out.println("hmm hmm hmm");
+                }*/
+                /*if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
+                    System.out.println("Neighbor passed vibe check: " + neighbor);
+                    System.out.println("Current set of neighbors to go through after: " + neighbors);
+                    System.out.println("Grabbing neighbors: " + neighbor.getNeighboringClusters());
+                }*/
+                for (Cluster newNeighbor : neighbor.getNeighboringClusters()) {
+                    if (!visitedNeighbors.contains(newNeighbor) && !clustersAccountedFor.contains(newNeighbor)) {
                         neighbors.add(newNeighbor);
+                        visitedNeighbors.add(newNeighbor);
                     }
                 }
                 //neighbors.addAll(neighbor.getNeighboringClusters().stream().filter(e -> !visitedNeighbors.contains(e)).collect(Collectors.toList()));
@@ -318,6 +334,9 @@ public class ObjectIdentifier {
         }
 
         for (int[] point : pointsInCluster) {
+/*            if ( point[0] == 270 && point[1] == 164) {
+                System.out.println("Hmm");
+            }*/
             visited[point[0]][point[1]] = true;
         }
 
@@ -328,16 +347,31 @@ public class ObjectIdentifier {
             }
         }*/
 
-        if (size > 500) {
-            System.out.println("Possible object found!");
-            System.out.println("startx: " + startX);
-            System.out.println("starty: " + startY);
-            System.out.println("endx: " + endX);
-            System.out.println("endy: " + endY);
-            System.out.println("size: " + size);
-            System.out.println("Visited neighbors: " + visitedNeighbors.size());
-            System.out.println("points in cluster: " + pointsInCluster.size());
+        if (size > 5000) {
+            //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
+                System.out.println("Possible object found!");
+                System.out.println("Started in cluster: " + cluster + " that has info " + cluster.getStartX() + " " + cluster.getStartY() + " " + cluster.getEndX() + " " + cluster.getEndY());
+                System.out.println("Original neighboring cluster: " + cluster.getNeighboringClusters());
+                System.out.println("Starting point of func: " + x + " " + y);
+                System.out.println("startx: " + startX);
+                System.out.println("starty: " + startY);
+                System.out.println("endx: " + endX);
+                System.out.println("endy: " + endY);
+                System.out.println("width: " + (endX - startX));
+                System.out.println("height: " + (endY - startY));
+                System.out.println("size: " + size);
+                System.out.println("Visited neighbors: " + visitedNeighbors.size());
+                System.out.println("Neighbor facts");
+                /*for (Cluster neighbor : visitedNeighbors) {
+                    System.out.println(neighbor + " " + neighbor.getSize() + " n: " + neighbor.getNeighboringClusters().toString());
+                    System.out.println(neighbor.getStartX() + " " + neighbor.getStartY() + " " + neighbor.getEndX() + " " + neighbor.getEndY());
+                }*/
+                System.out.println("points in cluster: " + pointsInCluster.size());
+                //xSystem.out.println("colors in cluster: " + colorsInCluster.toString());
+                System.out.println("---------------------------------------");
+            //}
         }
+        clustersAccountedFor.addAll(visitedNeighbors);
         return visited;
     }
 
@@ -374,7 +408,7 @@ public class ObjectIdentifier {
         //System.out.println(ColorConverter.RGBtoHSV(255, 128, 64, 0, 0, 0));
 
         BufferedImage SubImg
-                = objectIdentifier.inputImage.getSubimage(254, 395, 65, 24);
+                = objectIdentifier.inputImage.getSubimage(395, 159, 244, 298);
 
         JLabel imageOnFrame = new JLabel(new ImageIcon(SubImg));
 
