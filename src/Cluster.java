@@ -34,6 +34,11 @@ public class Cluster {
         return points;
     }
 
+    public Cluster addPoints(List<int[]> points) {
+        this.points.addAll(points);
+        return this;
+    }
+
     public int getHValue() {
         return hValue;
     }

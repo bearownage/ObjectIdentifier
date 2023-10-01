@@ -277,12 +277,33 @@ public class ObjectIdentifier {
                 if (objectHistogram.getMostCommonColors().contains(clusters[x][y].getHValue()) && !visited[x][y]) {
                     //System.out.println("Match!");
                     //System.out.println(clustersAccountedFor.size());
-                    mergeClusters(x, y, objectHistogram, clusters[x][y], visited, clustersAccountedFor);
+                    Cluster mergedCluster = mergeClusters(x, y, objectHistogram, clusters[x][y], visited, clustersAccountedFor);
                     //System.out.println(x + " " + y);
                     //System.out.println(visited[x][y]);
+                    if (mergedCluster.getSize() > objectHistogram.getMostCommonColors().size()) {
+                        //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
+                        System.out.println("Possible object found!");
+                        System.out.println("Started in cluster: " + clusters[x][y] + " that has info " + clusters[x][y].getStartX() + " " + clusters[x][y].getStartY() + " " + clusters[x][y].getEndX() + " " + clusters[x][y].getEndY());
+                        System.out.println("Original neighboring cluster: " + clusters[x][y].getNeighboringClusters());
+                        System.out.println("Starting point of func: " + x + " " + y);
+                        System.out.println("startx: " + mergedCluster.getStartX());
+                        System.out.println("starty: " + mergedCluster.getStartY());
+                        System.out.println("endx: " + mergedCluster.getEndX());
+                        System.out.println("endy: " + mergedCluster.getEndY());
+                        System.out.println("width: " + (mergedCluster.getEndX() - mergedCluster.getStartX()));
+                        System.out.println("height: " + (mergedCluster.getEndY() - mergedCluster.getStartY()));
+                        System.out.println("size: " + mergedCluster.getSize());
+                        System.out.println("Neighbor facts");
+/*                for (Cluster neighbor : visitedNeighbors) {
+                    System.out.println(neighbor + " " + neighbor.getSize() + " n: " + neighbor.getNeighboringClusters().toString());
+                    System.out.println(neighbor.getStartX() + " " + neighbor.getStartY() + " " + neighbor.getEndX() + " " + neighbor.getEndY());
+                }*/
+                        System.out.println("points in cluster: " + mergedCluster.getPoints().size());
+                        //xSystem.out.println("colors in cluster: " + colorsInCluster.toString());
+                        System.out.println("---------------------------------------");
 
-
-
+                        createClusterHistogramAndCompare(objectHistogram, mergedCluster);
+                    }
                 }
             }
         }
@@ -349,40 +370,54 @@ public class ObjectIdentifier {
             }
         }*/
 
-        if (size > objectHistogram.getMostCommonColors().size()) {
+/*        if (size > objectHistogram.getMostCommonColors().size()) {
             //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
-                System.out.println("Possible object found!");
-                System.out.println("Started in cluster: " + cluster + " that has info " + cluster.getStartX() + " " + cluster.getStartY() + " " + cluster.getEndX() + " " + cluster.getEndY());
-                System.out.println("Original neighboring cluster: " + cluster.getNeighboringClusters());
-                System.out.println("Starting point of func: " + x + " " + y);
-                System.out.println("startx: " + startX);
-                System.out.println("starty: " + startY);
-                System.out.println("endx: " + endX);
-                System.out.println("endy: " + endY);
-                System.out.println("width: " + (endX - startX));
-                System.out.println("height: " + (endY - startY));
-                System.out.println("size: " + size);
-                System.out.println("Visited neighbors: " + visitedNeighbors.size());
-                System.out.println("Neighbor facts");
-/*                for (Cluster neighbor : visitedNeighbors) {
+            System.out.println("Possible object found!");
+            System.out.println("Started in cluster: " + cluster + " that has info " + cluster.getStartX() + " " + cluster.getStartY() + " " + cluster.getEndX() + " " + cluster.getEndY());
+            System.out.println("Original neighboring cluster: " + cluster.getNeighboringClusters());
+            System.out.println("Starting point of func: " + x + " " + y);
+            System.out.println("startx: " + startX);
+            System.out.println("starty: " + startY);
+            System.out.println("endx: " + endX);
+            System.out.println("endy: " + endY);
+            System.out.println("width: " + (endX - startX));
+            System.out.println("height: " + (endY - startY));
+            System.out.println("size: " + size);
+            System.out.println("Visited neighbors: " + visitedNeighbors.size());
+            System.out.println("Neighbor facts");
+*//*                for (Cluster neighbor : visitedNeighbors) {
                     System.out.println(neighbor + " " + neighbor.getSize() + " n: " + neighbor.getNeighboringClusters().toString());
                     System.out.println(neighbor.getStartX() + " " + neighbor.getStartY() + " " + neighbor.getEndX() + " " + neighbor.getEndY());
-                }*/
-                System.out.println("points in cluster: " + pointsInCluster.size());
-                //xSystem.out.println("colors in cluster: " + colorsInCluster.toString());
-                System.out.println("---------------------------------------");
+                }*//*
+            System.out.println("points in cluster: " + pointsInCluster.size());
+            //xSystem.out.println("colors in cluster: " + colorsInCluster.toString());
+            System.out.println("---------------------------------------");
 
-                createClusterHistogramAndCompare(objectHistogram);
-            }
+            createClusterHistogramAndCompare(objectHistogram);
+        }*/
 
 
         //}
         clustersAccountedFor.addAll(visitedNeighbors);
-        return new Cluster(-1, size, startX, startY, endX, endY);
+        return new Cluster(-1, size, startX, startY, endX, endY).addPoints(pointsInCluster);
     }
 
-    public void createClusterHistogramAndCompare(Histogram objectHistogram) {
+    public void createClusterHistogramAndCompare(Histogram objectHistogram, Cluster mergedCluster) {
+        Histogram mergedClusterHistogram = new Histogram();
 
+        for (int[] points : mergedCluster.getPoints()) {
+            int h = clusters[points[0]][points[1]].getHValue();
+            if (mergedClusterHistogram.getRawTable().containsKey(h)) {
+                mergedClusterHistogram.getRawTable().put(h, mergedClusterHistogram.getRawTable().get(h) + 1);
+            } else {
+                mergedClusterHistogram.getRawTable().put(h, 1);
+            }
+        }
+
+        mergedClusterHistogram.calculateTotalPixels(mergedCluster.getStartX(), mergedCluster.getStartY(), mergedCluster.getEndX(), mergedCluster.getEndY());
+        mergedClusterHistogram.initRatioTable();
+        System.out.println("---------------Merged cluster histogram-------------");
+        System.out.println(mergedClusterHistogram.getRatioTable().toString());
     }
 
     public void createObjectHistogram(String imagePath) throws IOException {
