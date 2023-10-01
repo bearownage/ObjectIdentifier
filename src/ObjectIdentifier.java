@@ -432,7 +432,7 @@ public class ObjectIdentifier {
             System.out.println("Object: " + e.getKey());
             System.out.println("Value E: " + objectHistogram.getRatioTable().get(e.getKey()) + " O" + e.getValue());
             System.out.println("Chi: " + Math.pow((e.getValue() - objectHistogram.getRatioTable().get(e.getKey())), 2) / objectHistogram.getRatioTable().get(e.getKey()));*/
-            if (chi > 0.13) {
+            if (chi > 0.45) {
                 clusterIsValid = false;
                 break;
             }
