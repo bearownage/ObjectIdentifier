@@ -20,11 +20,13 @@ public class ObjectIdentifier {
     Hashtable<String, Histogram> objectHistograms;
     List<String> objectNames;
     Histogram imageHistogram;
+    List<Cluster> objectInImageClusters;
 
     ObjectIdentifier() {
         objectHistograms = new Hashtable<>();
         imageHistogram = new Histogram();
         objectNames = new ArrayList<>();
+        objectInImageClusters = new ArrayList<>();
         clusters = new Cluster[width + 1][height + 1];
     }
 
@@ -282,31 +284,34 @@ public class ObjectIdentifier {
                     //System.out.println(visited[x][y]);
                     if (mergedCluster.getSize() > objectHistogram.getMostCommonColors().size()) {
                         //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
-                        System.out.println("Possible object found!");
-                        System.out.println("Started in cluster: " + clusters[x][y] + " that has info " + clusters[x][y].getStartX() + " " + clusters[x][y].getStartY() + " " + clusters[x][y].getEndX() + " " + clusters[x][y].getEndY());
-                        System.out.println("Original neighboring cluster: " + clusters[x][y].getNeighboringClusters());
-                        System.out.println("Starting point of func: " + x + " " + y);
-                        System.out.println("startx: " + mergedCluster.getStartX());
-                        System.out.println("starty: " + mergedCluster.getStartY());
-                        System.out.println("endx: " + mergedCluster.getEndX());
-                        System.out.println("endy: " + mergedCluster.getEndY());
-                        System.out.println("width: " + (mergedCluster.getEndX() - mergedCluster.getStartX()));
-                        System.out.println("height: " + (mergedCluster.getEndY() - mergedCluster.getStartY()));
-                        System.out.println("size: " + mergedCluster.getSize());
-                        System.out.println("Neighbor facts");
-/*                for (Cluster neighbor : visitedNeighbors) {
-                    System.out.println(neighbor + " " + neighbor.getSize() + " n: " + neighbor.getNeighboringClusters().toString());
-                    System.out.println(neighbor.getStartX() + " " + neighbor.getStartY() + " " + neighbor.getEndX() + " " + neighbor.getEndY());
-                }*/
-                        System.out.println("points in cluster: " + mergedCluster.getPoints().size());
-                        //xSystem.out.println("colors in cluster: " + colorsInCluster.toString());
-                        System.out.println("---------------------------------------");
+                        //if (x == 181 && y == 275) {
+/*                            System.out.println("Possible object found!");
+                            System.out.println("Started in cluster: " + clusters[x][y] + " that has info " + clusters[x][y].getStartX() + " " + clusters[x][y].getStartY() + " " + clusters[x][y].getEndX() + " " + clusters[x][y].getEndY());
+                            System.out.println("Original neighboring cluster: " + clusters[x][y].getNeighboringClusters());
+                            System.out.println("Starting point of func: " + x + " " + y);
+                            System.out.println("startx: " + mergedCluster.getStartX());
+                            System.out.println("starty: " + mergedCluster.getStartY());
+                            System.out.println("endx: " + mergedCluster.getEndX());
+                            System.out.println("endy: " + mergedCluster.getEndY());
+                            System.out.println("width: " + (mergedCluster.getEndX() - mergedCluster.getStartX()));
+                            System.out.println("height: " + (mergedCluster.getEndY() - mergedCluster.getStartY()));
+                            System.out.println("size: " + mergedCluster.getSize());
+                            System.out.println("Neighbor facts");
+*//*                        for (Cluster neighbor : visitedNeighbors) {
+                            System.out.println(neighbor + " " + neighbor.getSize() + " n: " + neighbor.getNeighboringClusters().toString());
+                            System.out.println(neighbor.getStartX() + " " + neighbor.getStartY() + " " + neighbor.getEndX() + " " + neighbor.getEndY());
+                        }*//*
 
+                            System.out.println("points in cluster: " + mergedCluster.getPoints().size());
+                            //xSystem.out.println("colors in cluster: " + colorsInCluster.toString());
+                            System.out.println("---------------------------------------");*/
                         createClusterHistogramAndCompare(objectHistogram, mergedCluster);
+                        //}
                     }
                 }
             }
         }
+
     }
 
     public Cluster mergeClusters(int x, int y, Histogram objectHistogram, Cluster cluster, boolean[][] visited, Set<Cluster> clustersAccountedFor) {
@@ -418,6 +423,27 @@ public class ObjectIdentifier {
         mergedClusterHistogram.initRatioTable();
         System.out.println("---------------Merged cluster histogram-------------");
         System.out.println(mergedClusterHistogram.getRatioTable().toString());
+        System.out.println("---Comparison---");
+        boolean clusterIsValid = true;
+        //double largestChi = -1.0;
+        for (Map.Entry<Integer, Double> e : mergedClusterHistogram.ratioTable.entrySet()) {
+            double chi = Math.pow((e.getValue() - objectHistogram.getRatioTable().get(e.getKey())), 2) / objectHistogram.getRatioTable().get(e.getKey());
+            /*System.out.println("Object histogram");
+            System.out.println("Object: " + e.getKey());
+            System.out.println("Value E: " + objectHistogram.getRatioTable().get(e.getKey()) + " O" + e.getValue());
+            System.out.println("Chi: " + Math.pow((e.getValue() - objectHistogram.getRatioTable().get(e.getKey())), 2) / objectHistogram.getRatioTable().get(e.getKey()));*/
+            if (chi > 0.13) {
+                clusterIsValid = false;
+                break;
+            }
+            //largestChi = Math.max(largestChi, chi);
+        }
+
+        if (clusterIsValid) {
+            objectInImageClusters.add(mergedCluster);
+        }
+
+        //System.out.println("Largest chi: " + largestChi);
     }
 
     public void createObjectHistogram(String imagePath) throws IOException {
@@ -439,22 +465,11 @@ public class ObjectIdentifier {
         // Use label to display the image
     }
 
-    public static void main(String[] args) throws IOException {
-        ObjectIdentifier objectIdentifier = new ObjectIdentifier();
+    public void labelObjectInImage() {
+        System.out.println(objectInImageClusters);
+        Cluster object = objectInImageClusters.get(0);
 
-        for (int i = 1; i < args.length; i++) {
-            objectIdentifier.createObjectHistogram(args[i]);
-        }
-
-        objectIdentifier.createImageClusters(args[0]);
-
-        objectIdentifier.findObjectInImage();
-
-        //System.out.println(ColorConverter.RGBtoHSV(255, 128, 64, 0, 0, 0));
-
-        BufferedImage SubImg
-                = objectIdentifier.inputImage.getSubimage(181, 96, 278, 305);
-
+        BufferedImage SubImg = inputImage.getSubimage(object.getStartX(), object.getStartY(), object.getEndX() - object.getStartX(), object.getEndY() - object.getStartY());
         JLabel imageOnFrame = new JLabel(new ImageIcon(SubImg));
 
         GridBagLayout gLayout = new GridBagLayout();
@@ -473,5 +488,20 @@ public class ObjectIdentifier {
 
         frame.pack();
         frame.setVisible(true);
+    }
+
+    public static void main(String[] args) throws IOException {
+        ObjectIdentifier objectIdentifier = new ObjectIdentifier();
+
+        for (int i = 1; i < args.length; i++) {
+            objectIdentifier.createObjectHistogram(args[i]);
+        }
+
+        objectIdentifier.createImageClusters(args[0]);
+        objectIdentifier.findObjectInImage();
+        objectIdentifier.labelObjectInImage();
+        //System.out.println(ColorConverter.RGBtoHSV(255, 128, 64, 0, 0, 0));
+
+
     }
 }
