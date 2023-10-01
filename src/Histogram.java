@@ -5,10 +5,10 @@ public class Histogram {
     private Double totalPixels;
     Hashtable<Integer, Integer> rawTable;
     Hashtable<Integer, Double> ratioTable;
-    List<Integer> mostCommonColors;
+    Set<Integer> mostCommonColors;
 
     public Histogram() {
-        this.mostCommonColors = new ArrayList<>();
+        this.mostCommonColors = new HashSet<>();
         this.rawTable = new Hashtable<>();
         this.ratioTable = new Hashtable<>();
         totalPixels = 0.0;
@@ -23,14 +23,14 @@ public class Histogram {
     }
 
     public void calculateTotalPixels(int topLeftCornerX, int topLeftCornerY, int bottomRightCornerX, int bottomRightCornerY) {
-        System.out.println("Calculating");
+        /*System.out.println("Calculating");
         System.out.println(topLeftCornerX);
         System.out.println(topLeftCornerY);
         System.out.println(bottomRightCornerX);
-        System.out.println(bottomRightCornerY);
+        System.out.println(bottomRightCornerY);*/
 
         totalPixels = (double) (bottomRightCornerX - topLeftCornerX) * (bottomRightCornerY - topLeftCornerY);
-        System.out.println(totalPixels);
+        //System.out.println(totalPixels);
 
         /*for (Integer value : rawTable.values()) {
             totalPixels+=value;
@@ -39,7 +39,7 @@ public class Histogram {
         System.out.println(totalPixels);*/
     }
 
-    public List<Integer> getMostCommonColors() {
+    public Set<Integer> getMostCommonColors() {
         return mostCommonColors;
     }
 
@@ -54,11 +54,12 @@ public class Histogram {
 
         //int numberOfTopValuesToTrack = 20;
         List<Double> mostCommonValues = new ArrayList<>();
+        int mostCommonValuesSize = (int) (0.15 * ratioTable.size());
         double sum = 0.0;
         for (Double value : values) {
-            sum += value;
+            //sum += value;
             mostCommonValues.add(value);
-            if ( sum > 0.70 ) {
+            if ( mostCommonValues.size() == mostCommonValuesSize ) {
                 break;
             }
         }
@@ -80,11 +81,8 @@ public class Histogram {
         }
 
         //System.out.println("Most common colors: " + mostCommonColors.toString());
-        //System.out.println(mostCommonColors.size());
+        System.out.println("Size of most common colors: " + mostCommonColors.size());
+        System.out.println(mostCommonColors.toString());
         System.out.println("Size of ratio table: " + ratioTable.size());
     }
-
-
-
-
 }

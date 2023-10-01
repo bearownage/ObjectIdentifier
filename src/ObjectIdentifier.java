@@ -248,7 +248,7 @@ public class ObjectIdentifier {
                 for (int y = 0; y < height; y++) {
                     if (objectHistograms.get(objectNames.get(0)).getRatioTable().containsKey(clusters[x][y].getHValue()) && !seenCluster.contains(clusters[x][y])) {
                         if (clusters[x][y].getSize() > 100) {
-                            System.out.println("cluster: " + clusters[x][y] + " size of cluster " + clusters[x][y].getSize() + " sx " + clusters[x][y].startX + " sy " + clusters[x][y].startY + " ex " + clusters[x][y].endX + " ey " + clusters[x][y].endY);
+                            //System.out.println("cluster: " + clusters[x][y] + " size of cluster " + clusters[x][y].getSize() + " sx " + clusters[x][y].startX + " sy " + clusters[x][y].startY + " ex " + clusters[x][y].endX + " ey " + clusters[x][y].endY);
                         }
                         seenCluster.add(clusters[x][y]);
                     }
@@ -347,7 +347,7 @@ public class ObjectIdentifier {
             }
         }*/
 
-        if (size > 5000) {
+        if (size > 1000) {
             //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
                 System.out.println("Possible object found!");
                 System.out.println("Started in cluster: " + cluster + " that has info " + cluster.getStartX() + " " + cluster.getStartY() + " " + cluster.getEndX() + " " + cluster.getEndY());
@@ -362,7 +362,7 @@ public class ObjectIdentifier {
                 System.out.println("size: " + size);
                 System.out.println("Visited neighbors: " + visitedNeighbors.size());
                 System.out.println("Neighbor facts");
-                /*for (Cluster neighbor : visitedNeighbors) {
+/*                for (Cluster neighbor : visitedNeighbors) {
                     System.out.println(neighbor + " " + neighbor.getSize() + " n: " + neighbor.getNeighboringClusters().toString());
                     System.out.println(neighbor.getStartX() + " " + neighbor.getStartY() + " " + neighbor.getEndX() + " " + neighbor.getEndY());
                 }*/
@@ -408,7 +408,7 @@ public class ObjectIdentifier {
         //System.out.println(ColorConverter.RGBtoHSV(255, 128, 64, 0, 0, 0));
 
         BufferedImage SubImg
-                = objectIdentifier.inputImage.getSubimage(395, 159, 244, 298);
+                = objectIdentifier.inputImage.getSubimage(58, 0, 210, 269);
 
         JLabel imageOnFrame = new JLabel(new ImageIcon(SubImg));
 
