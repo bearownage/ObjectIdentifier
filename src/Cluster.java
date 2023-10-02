@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Cluster {
 
@@ -14,6 +16,8 @@ public class Cluster {
     int endX;
     int endY;
 
+    private Set<Integer> colorsInCluster;
+
     public Cluster(int hValue, double size, int startX, int startY, int endX, int endY) {
         this.hValue = hValue;
         this.size = size;
@@ -23,6 +27,7 @@ public class Cluster {
         this.endY = endY;
         points = new ArrayList<>();
         neighboringClusters = new ArrayList<>();
+        colorsInCluster = new HashSet<>();
     }
 
     public Cluster addPoint(int x, int y) {
@@ -63,6 +68,15 @@ public class Cluster {
         return this;
     }
 
+    public Cluster addColorsInCluster(Set<Integer> colorsInCluster) {
+        this.colorsInCluster.addAll(colorsInCluster);
+        return this;
+    }
+
+    public Set<Integer> getColorsInCluster() {
+        return colorsInCluster;
+    }
+
     public List<Cluster> getNeighboringClusters() {
         return neighboringClusters;
     }
@@ -101,5 +115,20 @@ public class Cluster {
 
     public int getEndY() {
         return endY;
+    }
+
+    @Override
+    public String toString() {
+        return "Cluster{" +
+                "hValue=" + hValue +
+                ", size=" + size +
+                //", neighboringClusters=" + neighboringClusters +
+                ", points=" + points +
+                ", startX=" + startX +
+                ", startY=" + startY +
+                ", endX=" + endX +
+                ", endY=" + endY +
+                //", colorsInCluster=" + colorsInCluster +
+                '}';
     }
 }

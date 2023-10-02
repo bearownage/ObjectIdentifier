@@ -129,7 +129,7 @@ public class ObjectIdentifier {
 
             objectHistograms.get(imgPath).calculateTotalPixels(topLeftCornerX, topLeftCornerY, bottomRightCornerX, bottomRightCornerY);
             objectHistograms.get(imgPath).initRatioTable();
-            System.out.println(objectHistograms.get(imgPath).getRatioTable().toString());
+            //System.out.println(objectHistograms.get(imgPath).getRatioTable().toString());
             //System.out.println("Size of histogram : " + objectHistograms.get(imgPath).getRatioTable().size());
             //System.out.println("Illegal greens: " + illegalGreens);
         } catch (FileNotFoundException e) {
@@ -282,7 +282,7 @@ public class ObjectIdentifier {
                     Cluster mergedCluster = mergeClusters(x, y, objectHistogram, clusters[x][y], visited, clustersAccountedFor);
                     //System.out.println(x + " " + y);
                     //System.out.println(visited[x][y]);
-                    if (mergedCluster.getSize() > objectHistogram.getMostCommonColors().size()) {
+                    if (mergedCluster.getColorsInCluster().size() >= objectHistogram.getMostCommonColors().size()) {
                         //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
                         //if (x == 181 && y == 275) {
 /*                            System.out.println("Possible object found!");
@@ -326,7 +326,7 @@ public class ObjectIdentifier {
 
         Set<Cluster> visitedNeighbors = new HashSet<>(List.of(cluster));
         List<int[]> pointsInCluster = new ArrayList<>(cluster.getPoints());
-        List<Integer> colorsInCluster = new ArrayList<>(List.of(cluster.getHValue()));
+        Set<Integer> colorsInCluster = new HashSet<>(List.of(cluster.getHValue()));
 
         while (neighbors.size() != 0) {
             Cluster neighbor = neighbors.get(0);
@@ -404,7 +404,7 @@ public class ObjectIdentifier {
 
         //}
         clustersAccountedFor.addAll(visitedNeighbors);
-        return new Cluster(-1, size, startX, startY, endX, endY).addPoints(pointsInCluster);
+        return new Cluster(-1, size, startX, startY, endX, endY).addPoints(pointsInCluster).addColorsInCluster(colorsInCluster);
     }
 
     public void createClusterHistogramAndCompare(Histogram objectHistogram, Cluster mergedCluster) {
@@ -426,7 +426,7 @@ public class ObjectIdentifier {
         System.out.println("---Comparison---");
         boolean clusterIsValid = true;
         //double largestChi = -1.0;
-        for (Map.Entry<Integer, Double> e : mergedClusterHistogram.ratioTable.entrySet()) {
+        for (Map.Entry<Integer, Double> e : mergedClusterHistogram.getRatioTable().entrySet()) {
             double chi = Math.pow((e.getValue() - objectHistogram.getRatioTable().get(e.getKey())), 2) / objectHistogram.getRatioTable().get(e.getKey());
             /*System.out.println("Object histogram");
             System.out.println("Object: " + e.getKey());
@@ -466,8 +466,11 @@ public class ObjectIdentifier {
     }
 
     public void labelObjectInImage() {
-        System.out.println(objectInImageClusters);
-        Cluster object = objectInImageClusters.get(0);
+        System.out.println("Label");
+        System.out.println("Number of matches: " + objectInImageClusters.size());
+        Cluster object = objectInImageClusters.get(1);
+        System.out.println(objectHistograms.get(objectNames.get(0)).getMostCommonColors().size());
+        System.out.println(object.getColorsInCluster().size());
 
         BufferedImage SubImg = inputImage.getSubimage(object.getStartX(), object.getStartY(), object.getEndX() - object.getStartX(), object.getEndY() - object.getStartY());
         JLabel imageOnFrame = new JLabel(new ImageIcon(SubImg));

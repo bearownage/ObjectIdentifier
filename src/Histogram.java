@@ -54,7 +54,7 @@ public class Histogram {
 
         //int numberOfTopValuesToTrack = 20;
         List<Double> mostCommonValues = new ArrayList<>();
-        int mostCommonValuesSize = (int) (0.17 * ratioTable.size());
+        int mostCommonValuesSize = (int) (0.15 * ratioTable.size());
         double sum = 0.0;
         for (Double value : values) {
             //sum += value;
