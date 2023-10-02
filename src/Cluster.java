@@ -123,7 +123,7 @@ public class Cluster {
                 "hValue=" + hValue +
                 ", size=" + size +
                 //", neighboringClusters=" + neighboringClusters +
-                ", points=" + points +
+                //", points=" + points +
                 ", startX=" + startX +
                 ", startY=" + startY +
                 ", endX=" + endX +

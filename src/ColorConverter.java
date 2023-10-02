@@ -6,14 +6,16 @@ public class ColorConverter {
     // r,g,b values are from 0 to 1
 // h = [0,360], s = [0,1], v = [0,1]
 //		if s == 0, then h = -1 (undefined)
-    static List<Integer> RGBtoHSV(float r, float g, float b, float h, float s, float v) {
+    static List<Integer> RGBtoHSV(float r, float g, float b) {
         float min, max, delta;
         min = Math.min(r, Math.min(g, b));
         max = Math.max(r, Math.max(g, b));
-        v = max;
+        float v = max;
 
         delta = max - min;
 
+        float h;
+        float s;
         if (max != 0) {
             s = delta / max;
         } else {
