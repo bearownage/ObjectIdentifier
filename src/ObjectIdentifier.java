@@ -282,8 +282,8 @@ public class ObjectIdentifier {
                     Cluster mergedCluster = mergeClusters(x, y, objectHistogram, clusters[x][y], visited, clustersAccountedFor);
                     //System.out.println(x + " " + y);
                     //System.out.println(visited[x][y]);
-                    if (mergedCluster.getColorsInCluster().size() >= objectHistogram.getMostCommonColors().size()) {
- //                       if (mergedCluster.getSize() > 1000) {
+//                    if (mergedCluster.getColorsInCluster().size() >= objectHistogram.getMostCommonColors().size()) {
+                        if (mergedCluster.getSize() > 1000) {
 
                             //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
                             //if (x == 181 && y == 275) {
@@ -422,6 +422,7 @@ public class ObjectIdentifier {
         }
         mergedClusterHistogram.calculateTotalPixels(mergedCluster.getStartX(), mergedCluster.getStartY(), mergedCluster.getEndX(), mergedCluster.getEndY());
         mergedClusterHistogram.initRatioTable();
+        System.out.println(mergedCluster.toString());
 /*
         System.out.println("---------------Merged cluster histogram-------------");
         System.out.println(mergedClusterHistogram.getRatioTable().toString());

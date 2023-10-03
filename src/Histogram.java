@@ -111,6 +111,7 @@ public class Histogram {
         //System.out.println("Most common values: " + mostCommonValues);
         //System.out.println(mostCommonValues.stream().mapToDouble(Double::doubleValue).sum());
 
+        System.out.println("------------Init Table-----------");
         System.out.println("Order of colors");
         for (Double value : mostCommonValues) {
             for (Map.Entry<Integer, Double> e : ratioTable.entrySet()) {
