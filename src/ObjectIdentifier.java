@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -38,8 +39,16 @@ public class ObjectIdentifier {
         try {
             //Create a new HashTable for this object
             System.out.println("Reading Object: " + imgPath);
-            objectHistograms.put(imgPath, new Histogram());
-            objectNames.add(imgPath);
+            String imageName;
+            if ( imgPath.contains("\\")) {
+                String[] path = imgPath.split("\\\\");
+                imageName = path[path.length-1];
+            } else {
+                imageName = imgPath;
+            }
+            objectNames.add(imageName);
+            objectHistograms.put(imageName, new Histogram());
+
 
             int frameLength = width * height * 3;
 
@@ -109,10 +118,10 @@ public class ObjectIdentifier {
                             System.out.println(hsv.get(1));
                             System.out.println(hsv.get(2));
                         }*/
-                        if (objectHistograms.get(imgPath).getRawTable().containsKey(h)) {
-                            objectHistograms.get(imgPath).getRawTable().put(h, objectHistograms.get(imgPath).getRawTable().get(h) + 1);
+                        if (objectHistograms.get(imageName).getRawTable().containsKey(h)) {
+                            objectHistograms.get(imageName).getRawTable().put(h, objectHistograms.get(imageName).getRawTable().get(h) + 1);
                         } else {
-                            objectHistograms.get(imgPath).getRawTable().put(h, 1);
+                            objectHistograms.get(imageName).getRawTable().put(h, 1);
                         }
                         /*if (objectHistograms.get(imgPath).getRawTable().containsKey((float) pix)) {
                             objectHistograms.get(imgPath).getRawTable().put((float) pix, objectHistograms.get(imgPath).getRawTable().get((float) pix) + 1);
@@ -127,8 +136,8 @@ public class ObjectIdentifier {
                 }
             }
 
-            objectHistograms.get(imgPath).calculateTotalPixels(topLeftCornerX, topLeftCornerY, bottomRightCornerX, bottomRightCornerY);
-            objectHistograms.get(imgPath).initRatioTable();
+            objectHistograms.get(imageName).calculateTotalPixels(topLeftCornerX, topLeftCornerY, bottomRightCornerX, bottomRightCornerY);
+            objectHistograms.get(imageName).initRatioTable();
             //System.out.println(objectHistograms.get(imgPath).getRatioTable().toString());
             //System.out.println("Size of histogram : " + objectHistograms.get(imgPath).getRatioTable().size());
             //System.out.println("Illegal greens: " + illegalGreens);
@@ -283,10 +292,10 @@ public class ObjectIdentifier {
                     //System.out.println(x + " " + y);
                     //System.out.println(visited[x][y]);
 //                    if (mergedCluster.getColorsInCluster().size() >= objectHistogram.getMostCommonColors().size()) {
-                        if (mergedCluster.getSize() > 1000) {
+                    if (mergedCluster.getSize() > 1000) {
 
-                            //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
-                            //if (x == 181 && y == 275) {
+                        //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
+                        //if (x == 181 && y == 275) {
 /*                            System.out.println("Possible object found!");
                             System.out.println("Started in cluster: " + clusters[x][y] + " that has info " + clusters[x][y].getStartX() + " " + clusters[x][y].getStartY() + " " + clusters[x][y].getEndX() + " " + clusters[x][y].getEndY());
                             System.out.println("Original neighboring cluster: " + clusters[x][y].getNeighboringClusters());
@@ -307,7 +316,7 @@ public class ObjectIdentifier {
                             System.out.println("points in cluster: " + mergedCluster.getPoints().size());
                             //xSystem.out.println("colors in cluster: " + colorsInCluster.toString());
                             System.out.println("---------------------------------------");*/
-                            createClusterHistogramAndCompare(objectHistogram, mergedCluster);
+                        createClusterHistogramAndCompare(objectHistogram, mergedCluster);
                         //}
                     }
                 }
@@ -460,7 +469,7 @@ public class ObjectIdentifier {
             for (int i = 0; i < mergedClusterHistogram.getMostCommonColorsInOrder().size(); i++) {
                 int colorCluster = mergedClusterHistogram.getMostCommonColorsInOrder().get(i);
                 int colorObject = objectHistogram.getMostCommonColorsInOrder().get(i);
-                if ( Math.abs(colorCluster - colorObject) > 16 || mergedClusterHistogram.getRawTable().get(colorCluster) < 90) {
+                if (Math.abs(colorCluster - colorObject) > 16 || mergedClusterHistogram.getRawTable().get(colorCluster) < 90) {
                     clusterIsValid = false;
                     break;
                 }
@@ -515,8 +524,28 @@ public class ObjectIdentifier {
         System.out.println("Total Clusters: " + object.getColorsInCluster().size());
         System.out.println();
 
-        BufferedImage SubImg = inputImage.getSubimage(object.getStartX(), object.getStartY(), object.getEndX() - object.getStartX(), object.getEndY() - object.getStartY());
-        JLabel imageOnFrame = new JLabel(new ImageIcon(SubImg));
+        int widthOfBox = 4;
+        int grey = 8421504;
+        for (int i = object.getStartX(); i < object.getEndX(); i++) {
+            for (int j = object.getStartY(); j < object.getEndY(); j++) {
+                if (i - object.getStartX() <= widthOfBox) {
+                    inputImage.setRGB(i, j, grey);
+                } else if (j - object.getStartY() <= widthOfBox) {
+                    inputImage.setRGB(i, j, grey);
+                } else if (object.getEndY() - j <= widthOfBox) {
+                    inputImage.setRGB(i, j, grey);
+                } else if (object.getEndX() - i <= widthOfBox) {
+                    inputImage.setRGB(i, j, grey);
+                }
+            }
+        }
+
+        inputImage = process(inputImage, objectNames.get(0), object.getStartX() + widthOfBox, object.getEndY() - widthOfBox - 2);
+
+        //BufferedImage SubImg = inputImage.getSubimage(object.getStartX(), object.getStartY(), object.getEndX() - object.getStartX(), object.getEndY() - object.getStartY());
+        JLabel imageOnFrame = new JLabel(new ImageIcon(inputImage));
+        //JLabel objectLabel = new JLabel(objectNames.get(0));
+        //objectLabel.setBounds(object.getStartX(), object.getEndY(), object.getEndX() - object.getStartX(), 30);
 
         GridBagLayout gLayout = new GridBagLayout();
         JFrame frame = new JFrame();
@@ -528,12 +557,31 @@ public class ObjectIdentifier {
         c.gridx = 0;
         c.gridy = 0;
 
+        GridBagConstraints c2 = new GridBagConstraints();
+        c2.gridx = object.getStartX();
+        c2.gridy = object.getEndY();
+
         c.gridx = 0;
         c.gridy = 1;
         frame.getContentPane().add(imageOnFrame, c);
+        //frame.getContentPane().add(objectLabel, c2);
+        //frame.setLayout(null);
 
         frame.pack();
         frame.setVisible(true);
+    }
+
+    private BufferedImage process(BufferedImage old, String objectName, int x, int y) {
+        BufferedImage img = new BufferedImage(
+                width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = img.createGraphics();
+        g2d.drawImage(old, 0, 0, width, height, null);
+        g2d.setPaint(Color.GRAY);
+        g2d.setFont(new Font("Serif", Font.BOLD, 15));
+        FontMetrics fm = g2d.getFontMetrics();
+        g2d.drawString(objectName, x, y);
+        g2d.dispose();
+        return img;
     }
 
     public static void main(String[] args) throws IOException {
