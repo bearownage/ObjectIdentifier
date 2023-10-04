@@ -202,7 +202,7 @@ public class ObjectIdentifier {
                                 if (clusters[x - 1][y].getHValue() == h) {
                                     clusters[x - 1][y].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x - 1][y];
-                                } if (clusters[x][y - 1].getHValue() == h) {
+                                } else if (clusters[x][y - 1].getHValue() == h) {
                                     clusters[x][y - 1].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x][y - 1];
                                 } else {
@@ -545,7 +545,7 @@ public class ObjectIdentifier {
                         }
                     }
                 }
-                inputImage = process(inputImage, objectNames.get(0), object.getStartX() + widthOfBox, object.getEndY() - widthOfBox - 2);
+                inputImage = process(inputImage, objectNames.get(0), object.getStartX() + widthOfBox + 2, object.getEndY() - widthOfBox - 2);
             }
         }
 
@@ -576,7 +576,7 @@ public class ObjectIdentifier {
 
     private BufferedImage process(BufferedImage old, String objectName, int x, int y) {
         BufferedImage img = new BufferedImage(
-                width, height, BufferedImage.TYPE_INT_ARGB);
+                width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g2d = img.createGraphics();
         g2d.drawImage(old, 0, 0, width, height, null);
         g2d.setPaint(Color.LIGHT_GRAY);

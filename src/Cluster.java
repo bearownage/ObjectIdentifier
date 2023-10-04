@@ -122,6 +122,7 @@ public class Cluster {
         return "Cluster{" +
                 "hValue=" + hValue +
                 ", size=" + size +
+                ", size of points: " + points.size() +
                 //", neighboringClusters=" + neighboringClusters +
                 //", points=" + points +
                 ", startX=" + startX +
