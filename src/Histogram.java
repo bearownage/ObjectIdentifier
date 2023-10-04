@@ -6,6 +6,7 @@ public class Histogram {
     Hashtable<Integer, Integer> rawTable;
     Hashtable<Integer, Double> ratioTable;
     Set<Integer> mostCommonColors;
+    Set<Integer> mostCommonColorsWithRange;
     List<Integer> mostCommonColorsInOrder;
 
     double mean;
@@ -13,6 +14,7 @@ public class Histogram {
     public Histogram() {
         this.mostCommonColors = new HashSet<>();
         this.mostCommonColorsInOrder = new ArrayList<>();
+        mostCommonColorsWithRange = new HashSet<>();
         this.rawTable = new Hashtable<>();
         this.ratioTable = new Hashtable<>();
         totalPixels = 0.0;
@@ -78,6 +80,11 @@ public class Histogram {
         return mostCommonColors;
     }
 
+    public Set<Integer> getMostCommonColorsWithRange() {
+        return mostCommonColorsWithRange;
+    }
+
+
     public List<Integer> getMostCommonColorsInOrder() {
         return mostCommonColorsInOrder;
     }
@@ -99,7 +106,7 @@ public class Histogram {
         for (Double value : values) {
             //sum += value;
             mostCommonValues.add(value);
-            if ( mostCommonValues.size() == mostCommonValuesSize ) {
+            if ( value < 0.01 ) {
                 break;
             }
         }
@@ -112,7 +119,6 @@ public class Histogram {
         //System.out.println(mostCommonValues.stream().mapToDouble(Double::doubleValue).sum());
 
         System.out.println("------------Init Table-----------");
-        System.out.println("Order of colors");
         for (Double value : mostCommonValues) {
             for (Map.Entry<Integer, Double> e : ratioTable.entrySet()) {
                 Double value1 = e.getValue();
@@ -124,10 +130,36 @@ public class Histogram {
             }
         }
 
+        int range = 5;
+        for ( int i = 0; i < mostCommonColorsInOrder.size(); i++) {
+            int color = mostCommonColorsInOrder.get(i);
+            for (int j = -range; j <= range; j++) {
+                if ( color + j > 360 ) {
+                    mostCommonColorsWithRange.add(j - 1);
+                } else if ( j < 0 ) {
+                    mostCommonColorsWithRange.add(360 + j + 1);
+                } else {
+                    mostCommonColorsWithRange.add(color + j);
+                }
+            }
+        }
+
+        /*for (int i = 5; i < mostCommonColorsInOrder.size(); i++) {
+            mostCommonColorsWithRange.add(mostCommonColorsInOrder.get(i));
+        }*/
+
         //System.out.println("Most common colors: " + mostCommonColors.toString());
-        System.out.println("Size of most common colors: " + mostCommonColors.size());
+/*        System.out.println("Size of most common colors: " + mostCommonColors.size());
         //System.out.println(mostCommonColors.toString());
-        System.out.println("Size of ratio table: " + ratioTable.size());
+        System.out.println("Size of ratio table: " + ratioTable.size());*/
         System.out.println("Most common colors in order: " + mostCommonColorsInOrder);
+        System.out.println("Most common colors in order with range: " + mostCommonColorsWithRange);
+    }
+
+    public void printOutMostCommonColorsAndTheirPercentages() {
+        for (Integer color : mostCommonColorsInOrder) {
+            System.out.print(" " + color + ": " + getRatioTable().get(color) + ",");
+        }
+        System.out.println();
     }
 }
