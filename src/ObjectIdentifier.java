@@ -185,7 +185,7 @@ public class ObjectIdentifier {
                                 if (clusters[x - 1][y].getHValue() == h) {
                                     clusters[x - 1][y].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x - 1][y];
-                                } else if (clusters[x][y - 1].getHValue() == h) {
+                                } if (clusters[x][y - 1].getHValue() == h) {
                                     clusters[x][y - 1].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x][y - 1];
                                 } else {
