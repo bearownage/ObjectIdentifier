@@ -21,13 +21,13 @@ public class ObjectIdentifier {
     Hashtable<String, Histogram> objectHistograms;
     List<String> objectNames;
     Histogram imageHistogram;
-    List<Cluster> objectInImageClusters;
+    HashMap<String, List<Cluster>> objectInImageClusters;
 
     ObjectIdentifier() {
         objectHistograms = new Hashtable<>();
         imageHistogram = new Histogram();
         objectNames = new ArrayList<>();
-        objectInImageClusters = new ArrayList<>();
+        objectInImageClusters = new HashMap<>();
         clusters = new Cluster[width + 1][height + 1];
     }
 
@@ -48,7 +48,6 @@ public class ObjectIdentifier {
             }
             objectNames.add(imageName);
             objectHistograms.put(imageName, new Histogram());
-
 
             int frameLength = width * height * 3;
 
@@ -203,7 +202,7 @@ public class ObjectIdentifier {
                                 if (clusters[x - 1][y].getHValue() == h) {
                                     clusters[x - 1][y].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x - 1][y];
-                                } else if (clusters[x][y - 1].getHValue() == h) {
+                                } if (clusters[x][y - 1].getHValue() == h) {
                                     clusters[x][y - 1].increaseSize().setStartX(x).setStartY(y).setEndY(y).setEndX(x);
                                     clusters[x][y] = clusters[x][y - 1];
                                 } else {
@@ -276,10 +275,11 @@ public class ObjectIdentifier {
         }
     }
 
-    public void findObjectInImage() {
+    public void findObjectInImage(String objectName) {
         System.out.println("Finding object");
         boolean[][] visited = new boolean[width + 1][height + 1];
-        Histogram objectHistogram = objectHistograms.get(objectNames.get(0));
+        objectInImageClusters.put(objectName, new ArrayList<>());
+        Histogram objectHistogram = objectHistograms.get(objectName);
         Set<Cluster> clustersAccountedFor = new HashSet<>();
         //System.out.println(objectHistogram.getRatioTable().toString());
         for (int x = 0; x < width; x++) {
@@ -316,7 +316,7 @@ public class ObjectIdentifier {
                             System.out.println("points in cluster: " + mergedCluster.getPoints().size());
                             //xSystem.out.println("colors in cluster: " + colorsInCluster.toString());
                             System.out.println("---------------------------------------");*/
-                        createClusterHistogramAndCompare(objectHistogram, mergedCluster);
+                        createClusterHistogramAndCompare(objectHistogram, mergedCluster, objectName);
                         //}
                     }
                 }
@@ -418,7 +418,7 @@ public class ObjectIdentifier {
         return new Cluster(-1, size, startX, startY, endX, endY).addPoints(pointsInCluster).addColorsInCluster(colorsInCluster);
     }
 
-    public void createClusterHistogramAndCompare(Histogram objectHistogram, Cluster mergedCluster) {
+    public void createClusterHistogramAndCompare(Histogram objectHistogram, Cluster mergedCluster, String objectName) {
         Histogram mergedClusterHistogram = new Histogram();
 
         for (int[] points : mergedCluster.getPoints()) {
@@ -490,7 +490,7 @@ public class ObjectIdentifier {
                 mergedClusterHistogram.calculateMean();
                 System.out.println("Mean of real " + objectHistogram.getMean());
                 System.out.println("Mean of merged " + mergedClusterHistogram.getMean());
-                objectInImageClusters.add(mergedCluster);
+                objectInImageClusters.get(objectName).add(mergedCluster);
             }
         }
 
@@ -518,29 +518,36 @@ public class ObjectIdentifier {
 
     public void labelObjectInImage() {
         System.out.println("Label");
-        System.out.println("Number of matches: " + objectInImageClusters.size());
-        Cluster object = objectInImageClusters.get(0);
-        System.out.println("Common: " + objectHistograms.get(objectNames.get(0)).getMostCommonColorsInOrder());
-        System.out.println("Total Clusters: " + object.getColorsInCluster().size());
-        System.out.println();
-
         int widthOfBox = 4;
         int grey = 8421504;
-        for (int i = object.getStartX(); i < object.getEndX(); i++) {
-            for (int j = object.getStartY(); j < object.getEndY(); j++) {
-                if (i - object.getStartX() <= widthOfBox) {
-                    inputImage.setRGB(i, j, grey);
-                } else if (j - object.getStartY() <= widthOfBox) {
-                    inputImage.setRGB(i, j, grey);
-                } else if (object.getEndY() - j <= widthOfBox) {
-                    inputImage.setRGB(i, j, grey);
-                } else if (object.getEndX() - i <= widthOfBox) {
-                    inputImage.setRGB(i, j, grey);
+
+        for (Map.Entry<String, List<Cluster>> e : objectInImageClusters.entrySet()) {
+            List<Cluster> objectCluster = e.getValue();
+            System.out.println("Number of matches for: " + e.getKey() + ": " + objectCluster.size());
+
+            for (int index = 0; index < objectCluster.size(); index++) {
+                Cluster object = objectCluster.get(index);
+                System.out.println("Common: " + objectHistograms.get(e.getKey()).getMostCommonColorsInOrder());
+                System.out.println("Total Clusters: " + object.getColorsInCluster().size());
+                System.out.println("Cluster: " + object.toString());
+                System.out.println();
+
+                for (int i = object.getStartX(); i < object.getEndX(); i++) {
+                    for (int j = object.getStartY(); j < object.getEndY(); j++) {
+                        if (i - object.getStartX() <= widthOfBox) {
+                            inputImage.setRGB(i, j, grey);
+                        } else if (j - object.getStartY() <= widthOfBox) {
+                            inputImage.setRGB(i, j, grey);
+                        } else if (object.getEndY() - j <= widthOfBox) {
+                            inputImage.setRGB(i, j, grey);
+                        } else if (object.getEndX() - i <= widthOfBox) {
+                            inputImage.setRGB(i, j, grey);
+                        }
+                    }
                 }
+                inputImage = process(inputImage, objectNames.get(0), object.getStartX() + widthOfBox, object.getEndY() - widthOfBox - 2);
             }
         }
-
-        inputImage = process(inputImage, objectNames.get(0), object.getStartX() + widthOfBox, object.getEndY() - widthOfBox - 2);
 
         //BufferedImage SubImg = inputImage.getSubimage(object.getStartX(), object.getStartY(), object.getEndX() - object.getStartX(), object.getEndY() - object.getStartY());
         JLabel imageOnFrame = new JLabel(new ImageIcon(inputImage));
@@ -557,10 +564,6 @@ public class ObjectIdentifier {
         c.gridx = 0;
         c.gridy = 0;
 
-        GridBagConstraints c2 = new GridBagConstraints();
-        c2.gridx = object.getStartX();
-        c2.gridy = object.getEndY();
-
         c.gridx = 0;
         c.gridy = 1;
         frame.getContentPane().add(imageOnFrame, c);
@@ -576,7 +579,7 @@ public class ObjectIdentifier {
                 width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = img.createGraphics();
         g2d.drawImage(old, 0, 0, width, height, null);
-        g2d.setPaint(Color.GRAY);
+        g2d.setPaint(Color.LIGHT_GRAY);
         g2d.setFont(new Font("Serif", Font.BOLD, 15));
         FontMetrics fm = g2d.getFontMetrics();
         g2d.drawString(objectName, x, y);
@@ -592,7 +595,9 @@ public class ObjectIdentifier {
         }
 
         objectIdentifier.createImageClusters(args[0]);
-        objectIdentifier.findObjectInImage();
+        for (String objectName : objectIdentifier.objectNames) {
+            objectIdentifier.findObjectInImage(objectName);
+        }
         objectIdentifier.labelObjectInImage();
         //System.out.println(ColorConverter.RGBtoHSV(255, 128, 64, 0, 0, 0));
 
