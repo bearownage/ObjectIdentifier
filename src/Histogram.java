@@ -103,10 +103,20 @@ public class Histogram {
         List<Double> mostCommonValues = new ArrayList<>();
         int mostCommonValuesSize = (int) (0.15 * ratioTable.size());
         double sum = 0.0;
+/*        mostCommonValues.add(values.get(0));
+        Double prevValue = values.get(0);
+        for ( int i = 1; i < values.size(); i++ ) {
+            Double currValue = values.get(i);
+            if ( (currValue / prevValue) < 0.5 || currValue < 0.01 ) {
+                break;
+            } else {
+                mostCommonValues.add(currValue);
+            }
+        }*/
         for (Double value : values) {
             //sum += value;
             mostCommonValues.add(value);
-            if ( value < 0.01 ) {
+            if (value < 0.005) {
                 break;
             }
         }
@@ -130,19 +140,90 @@ public class Histogram {
             }
         }
 
-        int range = 5;
-        for ( int i = 0; i < mostCommonColorsInOrder.size(); i++) {
+        Set<Integer> colorsAdded = new HashSet<>();
+        HashMap<Integer, Double> map = new HashMap<>();
+
+        int window = 8;
+        for (int i = 0; i < mostCommonColorsInOrder.size(); i++) {
+            int color = mostCommonColorsInOrder.get(i);
+            if (!colorsAdded.contains(color)) {
+                map.put(color, 0.0);
+                int color2;
+
+                for (int j = -window; j <= window; j++) {
+                    if (color + j > 360) {
+                        color2 = j - 1;
+                        //mostCommonColorsWithRange.add(j - 1);
+                    } else if (color + j < 0) {
+                        color2 = 360 + (color + j + 1);
+                        //mostCommonColorsWithRange.add(360 + (color + j + 1));
+                    } else {
+                        color2 = color + j;
+                        //mostCommonColorsWithRange.add(color + j);
+                    }
+
+                    if (!colorsAdded.contains(color2)) {
+                        if (ratioTable.containsKey(color2)) {
+                            colorsAdded.add(color2);
+                            map.put(color, map.get(color) + ratioTable.get(color2));
+                        }
+                    }
+                }
+            }
+        }
+
+        System.out.println("My experiment: " + map);
+        List<Double> values2 = new ArrayList<>();
+        map.forEach((key, value) -> {
+            values2.add(value);
+        });
+        values2.sort(Collections.reverseOrder());
+
+        Double prevValue = values2.get(0);
+        List<Double> mostCommonValuesGrouped = new ArrayList<>();
+        mostCommonValuesGrouped.add(prevValue);
+        for (int i = 1; i < values2.size(); i++) {
+            Double currValue = values2.get(i);
+            if ((currValue / prevValue) < 0.5 || currValue < 0.01) {
+                break;
+            } else {
+                mostCommonValuesGrouped.add(currValue);
+            }
+        }
+
+        for (Double val : mostCommonValuesGrouped) {
+            for (Map.Entry<Integer, Double> e : map.entrySet()) {
+                if (Objects.equals(e.getValue(), val)) {
+                    int color = e.getKey();
+                    for (int j = -window; j <= window; j++) {
+                        if (color + j > 360) {
+                            mostCommonColorsWithRange.add(j - 1);
+                        } else if (color + j < 0) {
+                            mostCommonColorsWithRange.add(360 + (color + j + 1));
+                        } else {
+                            mostCommonColorsWithRange.add(color + j);
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+
+/*        int range = 5;
+        for (int i = 0; i < mostCommonColorsInOrder.size(); i++) {
             int color = mostCommonColorsInOrder.get(i);
             for (int j = -range; j <= range; j++) {
-                if ( color + j > 360 ) {
+                if (color + j > 360) {
                     mostCommonColorsWithRange.add(j - 1);
-                } else if ( j < 0 ) {
-                    mostCommonColorsWithRange.add(360 + j + 1);
+                } else if (color + j < 0) {
+                    mostCommonColorsWithRange.add(360 + (color + j + 1));
                 } else {
                     mostCommonColorsWithRange.add(color + j);
                 }
             }
-        }
+        }*/
 
         /*for (int i = 5; i < mostCommonColorsInOrder.size(); i++) {
             mostCommonColorsWithRange.add(mostCommonColorsInOrder.get(i));
