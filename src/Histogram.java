@@ -8,16 +8,19 @@ public class Histogram {
     Set<Integer> mostCommonColors;
     Set<Integer> mostCommonColorsWithRange;
     List<Integer> mostCommonColorsInOrder;
+    List<Integer> mostCommonColorsGrouped;
+    List<Double> mostCommonValuesGrouped;
 
     double mean;
 
     public Histogram() {
         this.mostCommonColors = new HashSet<>();
         this.mostCommonColorsInOrder = new ArrayList<>();
-        mostCommonColorsWithRange = new HashSet<>();
+        this.mostCommonColorsGrouped = new ArrayList<>();
+        this.mostCommonColorsWithRange = new HashSet<>();
         this.rawTable = new Hashtable<>();
         this.ratioTable = new Hashtable<>();
-        totalPixels = 0.0;
+        this.totalPixels = 0.0;
     }
 
     public Hashtable<Integer, Integer> getRawTable() {
@@ -43,6 +46,10 @@ public class Histogram {
         }
 
         System.out.println(totalPixels);*/
+    }
+
+    public List<Double> getMostCommonValuesGrouped() {
+        return mostCommonValuesGrouped;
     }
 
     public List<Integer> getColorsInOrder() {
@@ -87,6 +94,14 @@ public class Histogram {
 
     public List<Integer> getMostCommonColorsInOrder() {
         return mostCommonColorsInOrder;
+    }
+
+    public List<Integer> getMostCommonColorsGrouped() {
+        return mostCommonColorsGrouped;
+    }
+
+    public int getRangeOfColor() {
+        return 8;
     }
 
     public void initRatioTable() {
@@ -143,7 +158,7 @@ public class Histogram {
         Set<Integer> colorsAdded = new HashSet<>();
         HashMap<Integer, Double> map = new HashMap<>();
 
-        int window = 8;
+        int window = getRangeOfColor();
         for (int i = 0; i < mostCommonColorsInOrder.size(); i++) {
             int color = mostCommonColorsInOrder.get(i);
             if (!colorsAdded.contains(color)) {
@@ -180,11 +195,11 @@ public class Histogram {
         values2.sort(Collections.reverseOrder());
 
         Double prevValue = values2.get(0);
-        List<Double> mostCommonValuesGrouped = new ArrayList<>();
+        mostCommonValuesGrouped = new ArrayList<>();
         mostCommonValuesGrouped.add(prevValue);
         for (int i = 1; i < values2.size(); i++) {
             Double currValue = values2.get(i);
-            if ((currValue / prevValue) < 0.5 || currValue < 0.01) {
+            if (((currValue / prevValue) < 0.5 && currValue < 0.1 ) || currValue < 0.01) {
                 break;
             } else {
                 mostCommonValuesGrouped.add(currValue);
@@ -193,6 +208,7 @@ public class Histogram {
 
         for (Double val : mostCommonValuesGrouped) {
             for (Map.Entry<Integer, Double> e : map.entrySet()) {
+                mostCommonColorsGrouped.add(e.getKey());
                 if (Objects.equals(e.getValue(), val)) {
                     int color = e.getKey();
                     for (int j = -window; j <= window; j++) {

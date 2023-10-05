@@ -279,7 +279,7 @@ public class ObjectIdentifier {
                     //System.out.println(x + " " + y);
                     //System.out.println(visited[x][y]);
 //                    if (mergedCluster.getColorsInCluster().size() >= objectHistogram.getMostCommonColors().size()) {
-                    if (mergedCluster.getSize() > 1000) {
+                    if (mergedCluster.getSize() > 2000) {
 
                         //if ((x == 270 && y == 164) || (x == 269 && y == 163)) {
                         //if (x == 181 && y == 275) {
@@ -442,14 +442,46 @@ public class ObjectIdentifier {
                 i++;
             }*/
 
-            /*for (int i = 0; i < mergedClusterHistogram.getMostCommonColorsInOrder().size(); i++) {
-                int colorCluster = mergedClusterHistogram.getMostCommonColorsInOrder().get(i);
-                int colorObject = objectHistogram.getMostCommonColorsInOrder().get(i);
-                if (Math.abs(colorCluster - colorObject) > 20) {
+            System.out.println("Object most common colors grouped: " + objectHistogram.getMostCommonColorsGrouped().toString());
+            System.out.println("Merged cluster colors grouped: " + mergedClusterHistogram.getMostCommonColorsGrouped().toString());
+            for (int i = 0; i < objectHistogram.getMostCommonValuesGrouped().size(); i++) {
+                int color = objectHistogram.getMostCommonColorsGrouped().get(i);
+                int window = objectHistogram.getRangeOfColor() * 2;
+                int color2;
+
+                boolean foundAMatch = false;
+                for (int j = -window; j <= window; j++) {
+                    if (color + j > 360) {
+                        color2 = j - 1;
+                        //mostCommonColorsWithRange.add(j - 1);
+                    } else if (color + j < 0) {
+                        color2 = 360 + (color + j + 1);
+                        //mostCommonColorsWithRange.add(360 + (color + j + 1));
+                    } else {
+                        color2 = color + j;
+                        //mostCommonColorsWithRange.add(color + j);
+                    }
+
+                    if (mergedClusterHistogram.getMostCommonColorsGrouped().contains(color2)) {
+                        foundAMatch = true;
+                        break;
+                    }
+                }
+
+                if (!foundAMatch) {
                     clusterIsValid = false;
                     break;
                 }
-            }*/
+            }
+
+/*
+            for (int i = 0; i < mergedClusterHistogram.getMostCommonValuesGrouped().size(); i++) {
+                if (mergedClusterHistogram.getMostCommonValuesGrouped().ge< 0.01) {
+                    clusterIsValid = false;
+                    break;
+                }
+            }
+*/
 
             if (clusterIsValid) {
                 System.out.println("---Comparison Of Real Object vs Cluster---");
@@ -461,10 +493,10 @@ public class ObjectIdentifier {
                 System.out.println(objectHistogram.getMostCommonColorsInOrder());
                 System.out.println(mergedClusterHistogram.getMostCommonColorsInOrder());
                 System.out.println(mergedCluster.toString());
-                objectHistogram.calculateMean();
+                /*objectHistogram.calculateMean();
                 mergedClusterHistogram.calculateMean();
                 System.out.println("Mean of real " + objectHistogram.getMean());
-                System.out.println("Mean of merged " + mergedClusterHistogram.getMean());
+                System.out.println("Mean of merged " + mergedClusterHistogram.getMean());*/
                 objectInImageClusters.get(objectName).add(mergedCluster);
             }
         }
