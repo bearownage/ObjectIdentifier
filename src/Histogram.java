@@ -101,7 +101,7 @@ public class Histogram {
     }
 
     public int getRangeOfColor() {
-        return 8;
+        return 9;
     }
 
     public void initRatioTable(boolean isObjectHistogram) {
