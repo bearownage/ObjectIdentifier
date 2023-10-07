@@ -104,7 +104,7 @@ public class Histogram {
         return 8;
     }
 
-    public void initRatioTable() {
+    public void initRatioTable(boolean isObjectHistogram) {
         List<Double> values = new ArrayList<>();
         rawTable.forEach((key, value) -> {
             double ratioValue = value / totalPixels;
@@ -128,13 +128,13 @@ public class Histogram {
                 mostCommonValues.add(currValue);
             }
         }*/
-        for (Double value : values) {
+/*        for (Double value : values) {
             //sum += value;
             mostCommonValues.add(value);
             if (value < 0.005) {
                 break;
             }
-        }
+        }*/
         //for (int i = 0; i < numberOfTopValuesToTrack; i++) {
         //    mostCommonValues.add(values.get(i));
         //}
@@ -144,7 +144,7 @@ public class Histogram {
         //System.out.println(mostCommonValues.stream().mapToDouble(Double::doubleValue).sum());
 
         System.out.println("------------Init Table-----------");
-        for (Double value : mostCommonValues) {
+        for (Double value : values) {
             for (Map.Entry<Integer, Double> e : ratioTable.entrySet()) {
                 Double value1 = e.getValue();
                 if (Objects.equals(value, value1) && !mostCommonColors.contains(e.getKey())) {
@@ -199,7 +199,7 @@ public class Histogram {
         mostCommonValuesGrouped.add(prevValue);
         for (int i = 1; i < values2.size(); i++) {
             Double currValue = values2.get(i);
-            if (((currValue / prevValue) < 0.5 && currValue < 0.1 ) || currValue < 0.01) {
+            if ((((currValue / prevValue) < 0.5 && currValue < 0.07 ) || currValue < 0.02) && isObjectHistogram) {
                 break;
             } else {
                 mostCommonValuesGrouped.add(currValue);
@@ -208,8 +208,8 @@ public class Histogram {
 
         for (Double val : mostCommonValuesGrouped) {
             for (Map.Entry<Integer, Double> e : map.entrySet()) {
-                mostCommonColorsGrouped.add(e.getKey());
                 if (Objects.equals(e.getValue(), val)) {
+                    mostCommonColorsGrouped.add(e.getKey());
                     int color = e.getKey();
                     for (int j = -window; j <= window; j++) {
                         if (color + j > 360) {
