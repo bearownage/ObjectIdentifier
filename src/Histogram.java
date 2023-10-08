@@ -10,10 +10,14 @@ public class Histogram {
     List<Integer> mostCommonColorsInOrder;
     List<Integer> mostCommonColorsGrouped;
     List<Double> mostCommonValuesGrouped;
+    HashMap<Integer, Double> mostCommonColorsBucketed;
 
     double mean;
 
+    boolean isObjectHistogram;
+
     public Histogram() {
+        this.mostCommonColorsBucketed = new HashMap<>();
         this.mostCommonColors = new HashSet<>();
         this.mostCommonColorsInOrder = new ArrayList<>();
         this.mostCommonColorsGrouped = new ArrayList<>();
@@ -21,6 +25,21 @@ public class Histogram {
         this.rawTable = new Hashtable<>();
         this.ratioTable = new Hashtable<>();
         this.totalPixels = 0.0;
+        this.isObjectHistogram = true;
+    }
+
+    // Used for the matching image objects
+    // Gonna make the most common colors grouped buckets identical
+    public Histogram(List<Integer> mostCommonColorsInOrder) {
+        this.mostCommonColorsBucketed = new HashMap<>();
+        this.mostCommonColors = new HashSet<>();
+        this.mostCommonColorsInOrder = mostCommonColorsInOrder;
+        this.mostCommonColorsGrouped = new ArrayList<>();
+        this.mostCommonColorsWithRange = new HashSet<>();
+        this.rawTable = new Hashtable<>();
+        this.ratioTable = new Hashtable<>();
+        this.totalPixels = 0.0;
+        this.isObjectHistogram = false;
     }
 
     public Hashtable<Integer, Integer> getRawTable() {
@@ -32,24 +51,15 @@ public class Histogram {
     }
 
     public void calculateTotalPixels(int topLeftCornerX, int topLeftCornerY, int bottomRightCornerX, int bottomRightCornerY) {
-        /*System.out.println("Calculating");
-        System.out.println(topLeftCornerX);
-        System.out.println(topLeftCornerY);
-        System.out.println(bottomRightCornerX);
-        System.out.println(bottomRightCornerY);*/
-
         totalPixels = (double) (bottomRightCornerX - topLeftCornerX) * (bottomRightCornerY - topLeftCornerY);
-        //System.out.println(totalPixels);
-
-        /*for (Integer value : rawTable.values()) {
-            totalPixels+=value;
-        }
-
-        System.out.println(totalPixels);*/
     }
 
     public List<Double> getMostCommonValuesGrouped() {
         return mostCommonValuesGrouped;
+    }
+
+    public HashMap<Integer, Double> getMostCommonColorsBucketed() {
+        return mostCommonColorsBucketed;
     }
 
     public List<Integer> getColorsInOrder() {
@@ -65,10 +75,6 @@ public class Histogram {
     public void calculateMean() {
         double sum = 0;
         int divisor = 0;
-/*        for (int color : rawTable) {
-            sum += color * rawTable.get(color);
-            divisor += rawTable.get(color);
-        }*/
         for (Map.Entry<Integer, Integer> e : rawTable.entrySet()) {
             Integer color = e.getKey();
             Integer occurrences = e.getValue();
@@ -104,65 +110,37 @@ public class Histogram {
         return 9;
     }
 
-    public void initRatioTable(boolean isObjectHistogram) {
+    public void initRatioTable() {
         List<Double> values = new ArrayList<>();
+        //System.out.println("------------Init Table-----------");
+        //System.out.println(mostCommonColorsInOrder.toString());
         rawTable.forEach((key, value) -> {
             double ratioValue = value / totalPixels;
             values.add(ratioValue);
             ratioTable.put(key, ratioValue);
         });
         values.sort(Collections.reverseOrder());
-        //System.out.println(values);
 
-        //int numberOfTopValuesToTrack = 20;
-        List<Double> mostCommonValues = new ArrayList<>();
-        int mostCommonValuesSize = (int) (0.15 * ratioTable.size());
-        double sum = 0.0;
-/*        mostCommonValues.add(values.get(0));
-        Double prevValue = values.get(0);
-        for ( int i = 1; i < values.size(); i++ ) {
-            Double currValue = values.get(i);
-            if ( (currValue / prevValue) < 0.5 || currValue < 0.01 ) {
-                break;
-            } else {
-                mostCommonValues.add(currValue);
-            }
-        }*/
-/*        for (Double value : values) {
-            //sum += value;
-            mostCommonValues.add(value);
-            if (value < 0.005) {
-                break;
-            }
-        }*/
-        //for (int i = 0; i < numberOfTopValuesToTrack; i++) {
-        //    mostCommonValues.add(values.get(i));
-        //}
-
-        //List<Double> mostCommonValues = Arrays.asList(values.get(0), values.get(1), values.get(2), values.get(3));
-        //System.out.println("Most common values: " + mostCommonValues);
-        //System.out.println(mostCommonValues.stream().mapToDouble(Double::doubleValue).sum());
-
-        System.out.println("------------Init Table-----------");
         for (Double value : values) {
             for (Map.Entry<Integer, Double> e : ratioTable.entrySet()) {
                 Double value1 = e.getValue();
                 if (Objects.equals(value, value1) && !mostCommonColors.contains(e.getKey())) {
-                    //System.out.println(e.getKey());
-                    mostCommonColorsInOrder.add(e.getKey());
+                    if (isObjectHistogram) {
+                        mostCommonColorsInOrder.add(e.getKey());
+                    }
                     mostCommonColors.add(e.getKey());
                 }
             }
         }
 
         Set<Integer> colorsAdded = new HashSet<>();
-        HashMap<Integer, Double> map = new HashMap<>();
 
         int window = getRangeOfColor();
+        //System.out.println("Hmm: " + this.getMostCommonColorsInOrder());
         for (int i = 0; i < mostCommonColorsInOrder.size(); i++) {
             int color = mostCommonColorsInOrder.get(i);
             if (!colorsAdded.contains(color)) {
-                map.put(color, 0.0);
+                mostCommonColorsBucketed.put(color, 0.0);
                 int color2;
 
                 for (int j = -window; j <= window; j++) {
@@ -180,16 +158,16 @@ public class Histogram {
                     if (!colorsAdded.contains(color2)) {
                         if (ratioTable.containsKey(color2)) {
                             colorsAdded.add(color2);
-                            map.put(color, map.get(color) + ratioTable.get(color2));
+                            mostCommonColorsBucketed.put(color, mostCommonColorsBucketed.get(color) + ratioTable.get(color2));
                         }
                     }
                 }
             }
         }
 
-        System.out.println("My experiment: " + map);
+        //System.out.println("My experiment: " + mostCommonColorsBucketed);
         List<Double> values2 = new ArrayList<>();
-        map.forEach((key, value) -> {
+        mostCommonColorsBucketed.forEach((key, value) -> {
             values2.add(value);
         });
         values2.sort(Collections.reverseOrder());
@@ -207,7 +185,7 @@ public class Histogram {
         }
 
         for (Double val : mostCommonValuesGrouped) {
-            for (Map.Entry<Integer, Double> e : map.entrySet()) {
+            for (Map.Entry<Integer, Double> e : mostCommonColorsBucketed.entrySet()) {
                 if (Objects.equals(e.getValue(), val)) {
                     mostCommonColorsGrouped.add(e.getKey());
                     int color = e.getKey();
@@ -248,9 +226,9 @@ public class Histogram {
         //System.out.println("Most common colors: " + mostCommonColors.toString());
 /*        System.out.println("Size of most common colors: " + mostCommonColors.size());
         //System.out.println(mostCommonColors.toString());
-        System.out.println("Size of ratio table: " + ratioTable.size());*/
-        System.out.println("Most common colors in order: " + mostCommonColorsInOrder);
-        System.out.println("Most common colors in order with range: " + mostCommonColorsWithRange);
+        System.out.println("Size of ratio table: " + ratioTable.size());
+        //System.out.println("Most common colors in order: " + mostCommonColorsInOrder);
+        //System.out.println("Most common colors in order with range: " + mostCommonColorsWithRange);*/
     }
 
     public void printOutMostCommonColorsAndTheirPercentages() {

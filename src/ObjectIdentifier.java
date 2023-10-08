@@ -105,9 +105,9 @@ public class ObjectIdentifier {
             }
 
             objectHistograms.get(imageName).calculateTotalPixels(topLeftCornerX, topLeftCornerY, bottomRightCornerX, bottomRightCornerY);
-            objectHistograms.get(imageName).initRatioTable(true);
-            objectHistograms.get(imageName).printOutMostCommonColorsAndTheirPercentages();
-            System.out.println(objectHistograms.get(imageName).getRawTable());
+            objectHistograms.get(imageName).initRatioTable();
+            //objectHistograms.get(imageName).printOutMostCommonColorsAndTheirPercentages();
+            //System.out.println(objectHistograms.get(imageName).getRawTable());
             //System.out.println(objectHistograms.get(imgPath).getRatioTable().toString());
             //System.out.println("Size of histogram : " + objectHistograms.get(imgPath).getRatioTable().size());
             //System.out.println("Illegal greens: " + illegalGreens);
@@ -206,24 +206,6 @@ public class ObjectIdentifier {
                     ind++;
                 }
             }
-
-            /*Set<Cluster> seenCluster = new HashSet<>();
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < height; y++) {
-                    if (objectHistograms.get(objectNames.get(0)).getRatioTable().containsKey(clusters[x][y].getHValue()) && !seenCluster.contains(clusters[x][y])) {
-                        if (clusters[x][y].getSize() > 100) {
-                            //System.out.println("cluster: " + clusters[x][y] + " size of cluster " + clusters[x][y].getSize() + " sx " + clusters[x][y].startX + " sy " + clusters[x][y].startY + " ex " + clusters[x][y].endX + " ey " + clusters[x][y].endY);
-                        }
-                        seenCluster.add(clusters[x][y]);
-                    }
-                }
-            }
-            System.out.println("Total number of clusters : " + seenCluster.size());*/
-
-            System.out.println("Overall image histogram");
-            imageHistogram.calculateTotalPixels(0, 0, width, height);
-            imageHistogram.initRatioTable(false);
-            imageHistogram.printOutMostCommonColorsAndTheirPercentages();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -237,16 +219,13 @@ public class ObjectIdentifier {
         objectInImageClusters.put(objectName, new ArrayList<>());
         Histogram objectHistogram = objectHistograms.get(objectName);
         Set<Cluster> clustersAccountedFor = new HashSet<>();
-        //System.out.println(objectHistogram.getRatioTable().toString());
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 if (objectHistogram.getMostCommonColorsWithRange().contains(clusters[x][y].getHValue()) && !visited[x][y]) {
                     Cluster mergedCluster = mergeClusters(x, y, objectHistogram, clusters[x][y], visited, clustersAccountedFor);
-//                    if (mergedCluster.getColorsInCluster().size() >= objectHistogram.getMostCommonColors().size()) {
                     if (mergedCluster.getSize() > 2000 && mergedCluster.getSize() < 150000) {
 
                         createClusterHistogramAndCompare(objectHistogram, mergedCluster, objectName);
-                        //}
                     }
                 }
             }
@@ -338,7 +317,7 @@ public class ObjectIdentifier {
     }
 
     public void createClusterHistogramAndCompare(Histogram objectHistogram, Cluster mergedCluster, String objectName) {
-        Histogram mergedClusterHistogram = new Histogram();
+        Histogram mergedClusterHistogram = new Histogram(objectHistogram.getMostCommonColorsInOrder());
 
         for (int[] points : mergedCluster.getPoints()) {
             int h = clusters[points[0]][points[1]].getHValue();
@@ -349,18 +328,41 @@ public class ObjectIdentifier {
             }
         }
         mergedClusterHistogram.calculateTotalPixels(mergedCluster.getStartX(), mergedCluster.getStartY(), mergedCluster.getEndX(), mergedCluster.getEndY());
-        mergedClusterHistogram.initRatioTable(false);
+        mergedClusterHistogram.initRatioTable();
         System.out.println("Merged Cluster: " + mergedCluster.toString());
-
-        System.out.println("---------------Merged cluster histogram-------------");
-        System.out.println(mergedClusterHistogram.getRatioTable().toString());
+        //System.out.println("---------------Merged cluster histogram-------------");
+        //System.out.println(mergedClusterHistogram.getRatioTable().toString());
         //System.out.println(mergedClusterHistogram.getRawTable().toString());
 
         if (objectHistogram.getMostCommonColorsWithRange().containsAll(mergedClusterHistogram.getMostCommonColors())) {
             boolean clusterIsValid = true;
-            System.out.println("Object most common colors grouped: " + objectHistogram.getMostCommonColorsGrouped().toString());
-            System.out.println("Merged cluster colors grouped: " + mergedClusterHistogram.getMostCommonColorsGrouped().toString());
-            for (int i = 0; i < objectHistogram.getMostCommonValuesGrouped().size(); i++) {
+
+            System.out.println("----Comparisons-----");
+
+            double prevChi = 0.0;
+            for (int i = 0; i < objectHistogram.getMostCommonColorsGrouped().size(); i++) {
+                int currColor = objectHistogram.getMostCommonColorsGrouped().get(i);
+                //int nextColor = objectHistogram.getMostCommonColorsGrouped().get(i+1);
+                //System.out.println("Object: " + key + " : " + objectHistogram.getMostCommonColorsBucketed().get(key));
+                System.out.println(("Cluster in Image: " + currColor + " : " + objectHistogram.getMostCommonColorsBucketed().get(currColor)));
+
+                double chi = Math.pow((mergedClusterHistogram.getMostCommonColorsBucketed().get(currColor) - objectHistogram.getMostCommonColorsBucketed().get(currColor)), 2) / objectHistogram.getMostCommonColorsBucketed().get(currColor);
+                System.out.println("Color: " + currColor + " Chi!: " + chi);
+
+                /*if ( mergedClusterHistogram.getMostCommonColorsBucketed().get(currColor) < mergedClusterHistogram.getMostCommonColorsBucketed().get(nextColor) ) {
+                    System.out.println("Failed where: " + currColor + " was less than " + nextColor);
+                    clusterIsValid = false;
+                }*/
+
+                if ( chi < 0.007 || chi > 0.21 ) {
+                    System.out.println("chi failed: " + currColor);
+                    clusterIsValid = false;
+                }
+            }
+
+            //System.out.println("Object most common colors grouped: " + objectHistogram.getMostCommonColorsGrouped().toString());
+            //System.out.println("Merged cluster colors grouped: " + mergedClusterHistogram.getMostCommonColorsGrouped().toString());
+            /*for (int i = 0; i < objectHistogram.getMostCommonValuesGrouped().size(); i++) {
                 int color = objectHistogram.getMostCommonColorsGrouped().get(i);
                 int window = objectHistogram.getRangeOfColor();
                 int color2;
@@ -389,7 +391,7 @@ public class ObjectIdentifier {
                     clusterIsValid = false;
                     break;
                 }
-            }
+            }*/
 
 /*
             for (int i = 0; i < mergedClusterHistogram.getMostCommonValuesGrouped().size(); i++) {
@@ -401,15 +403,15 @@ public class ObjectIdentifier {
 */
 
             if (clusterIsValid) {
-                System.out.println("---Comparison Of Real Object vs Cluster---");
-                System.out.println("Merged: " + mergedClusterHistogram.getRawTable().toString());
+                //System.out.println("---Comparison Of Real Object vs Cluster---");
+                //System.out.println("Merged: " + mergedClusterHistogram.getRawTable().toString());
                 //System.out.println("Ratio: " + objectHistogram.getRatioTable());
                 /*System.out.println(objectHistogram.getMostCommonColorsInOrder().toString());
                 System.out.println(mergedClusterHistogram.getMostCommonColorsInOrder().toString());*/
-                System.out.println("-----------Colors-----------");
+                /*System.out.println("-----------Colors-----------");
                 System.out.println(objectHistogram.getMostCommonColorsInOrder());
                 System.out.println(mergedClusterHistogram.getMostCommonColorsInOrder());
-                System.out.println(mergedCluster.toString());
+                System.out.println(mergedCluster.toString());*/
                 /*objectHistogram.calculateMean();
                 mergedClusterHistogram.calculateMean();
                 System.out.println("Mean of real " + objectHistogram.getMean());
