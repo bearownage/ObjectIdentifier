@@ -32,20 +32,7 @@ public class Histogram {
     }
 
     public void calculateTotalPixels(int topLeftCornerX, int topLeftCornerY, int bottomRightCornerX, int bottomRightCornerY) {
-        /*System.out.println("Calculating");
-        System.out.println(topLeftCornerX);
-        System.out.println(topLeftCornerY);
-        System.out.println(bottomRightCornerX);
-        System.out.println(bottomRightCornerY);*/
-
         totalPixels = (double) (bottomRightCornerX - topLeftCornerX) * (bottomRightCornerY - topLeftCornerY);
-        //System.out.println(totalPixels);
-
-        /*for (Integer value : rawTable.values()) {
-            totalPixels+=value;
-        }
-
-        System.out.println(totalPixels);*/
     }
 
     public List<Double> getMostCommonValuesGrouped() {
@@ -112,43 +99,10 @@ public class Histogram {
             ratioTable.put(key, ratioValue);
         });
         values.sort(Collections.reverseOrder());
-        //System.out.println(values);
-
-        //int numberOfTopValuesToTrack = 20;
-        List<Double> mostCommonValues = new ArrayList<>();
-        int mostCommonValuesSize = (int) (0.15 * ratioTable.size());
-        double sum = 0.0;
-/*        mostCommonValues.add(values.get(0));
-        Double prevValue = values.get(0);
-        for ( int i = 1; i < values.size(); i++ ) {
-            Double currValue = values.get(i);
-            if ( (currValue / prevValue) < 0.5 || currValue < 0.01 ) {
-                break;
-            } else {
-                mostCommonValues.add(currValue);
-            }
-        }*/
-/*        for (Double value : values) {
-            //sum += value;
-            mostCommonValues.add(value);
-            if (value < 0.005) {
-                break;
-            }
-        }*/
-        //for (int i = 0; i < numberOfTopValuesToTrack; i++) {
-        //    mostCommonValues.add(values.get(i));
-        //}
-
-        //List<Double> mostCommonValues = Arrays.asList(values.get(0), values.get(1), values.get(2), values.get(3));
-        //System.out.println("Most common values: " + mostCommonValues);
-        //System.out.println(mostCommonValues.stream().mapToDouble(Double::doubleValue).sum());
-
-        System.out.println("------------Init Table-----------");
         for (Double value : values) {
             for (Map.Entry<Integer, Double> e : ratioTable.entrySet()) {
                 Double value1 = e.getValue();
                 if (Objects.equals(value, value1) && !mostCommonColors.contains(e.getKey())) {
-                    //System.out.println(e.getKey());
                     mostCommonColorsInOrder.add(e.getKey());
                     mostCommonColors.add(e.getKey());
                 }
@@ -187,7 +141,6 @@ public class Histogram {
             }
         }
 
-        System.out.println("My experiment: " + map);
         List<Double> values2 = new ArrayList<>();
         map.forEach((key, value) -> {
             values2.add(value);
@@ -223,34 +176,6 @@ public class Histogram {
                 }
             }
         }
-
-
-
-
-/*        int range = 5;
-        for (int i = 0; i < mostCommonColorsInOrder.size(); i++) {
-            int color = mostCommonColorsInOrder.get(i);
-            for (int j = -range; j <= range; j++) {
-                if (color + j > 360) {
-                    mostCommonColorsWithRange.add(j - 1);
-                } else if (color + j < 0) {
-                    mostCommonColorsWithRange.add(360 + (color + j + 1));
-                } else {
-                    mostCommonColorsWithRange.add(color + j);
-                }
-            }
-        }*/
-
-        /*for (int i = 5; i < mostCommonColorsInOrder.size(); i++) {
-            mostCommonColorsWithRange.add(mostCommonColorsInOrder.get(i));
-        }*/
-
-        //System.out.println("Most common colors: " + mostCommonColors.toString());
-/*        System.out.println("Size of most common colors: " + mostCommonColors.size());
-        //System.out.println(mostCommonColors.toString());
-        System.out.println("Size of ratio table: " + ratioTable.size());*/
-        System.out.println("Most common colors in order: " + mostCommonColorsInOrder);
-        System.out.println("Most common colors in order with range: " + mostCommonColorsWithRange);
     }
 
     public void printOutMostCommonColorsAndTheirPercentages() {
